@@ -6,6 +6,13 @@ import (
 	"testing"
 )
 
+func mustMkdir(t *testing.T, path string) {
+	t.Helper()
+	if err := os.MkdirAll(path, 0755); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestFindRootFromExactDir(t *testing.T) {
 	dir := t.TempDir()
 	roadmapDir := filepath.Join(dir, ".liste")
@@ -59,12 +66,12 @@ func TestFindSubProjects(t *testing.T) {
 	dir := t.TempDir()
 
 	// Create root .liste
-	os.MkdirAll(filepath.Join(dir, ".liste"), 0755)
+	mustMkdir(t, filepath.Join(dir, ".liste"))
 
 	// Create sub-project .liste directories
-	os.MkdirAll(filepath.Join(dir, "service-a", ".liste"), 0755)
-	os.MkdirAll(filepath.Join(dir, "service-b", ".liste"), 0755)
-	os.MkdirAll(filepath.Join(dir, "nested", "service-c", ".liste"), 0755)
+	mustMkdir(t, filepath.Join(dir, "service-a", ".liste"))
+	mustMkdir(t, filepath.Join(dir, "service-b", ".liste"))
+	mustMkdir(t, filepath.Join(dir, "nested", "service-c", ".liste"))
 
 	subs, err := FindSubProjects(dir)
 	if err != nil {
@@ -94,8 +101,8 @@ func TestFindSubProjects(t *testing.T) {
 func TestFindSubProjectsSkipsHiddenDirs(t *testing.T) {
 	dir := t.TempDir()
 
-	os.MkdirAll(filepath.Join(dir, ".liste"), 0755)
-	os.MkdirAll(filepath.Join(dir, ".hidden", ".liste"), 0755)
+	mustMkdir(t, filepath.Join(dir, ".liste"))
+	mustMkdir(t, filepath.Join(dir, ".hidden", ".liste"))
 
 	subs, err := FindSubProjects(dir)
 	if err != nil {
@@ -110,8 +117,8 @@ func TestFindSubProjectsSkipsHiddenDirs(t *testing.T) {
 func TestDiscoverFull(t *testing.T) {
 	dir := t.TempDir()
 
-	os.MkdirAll(filepath.Join(dir, ".liste"), 0755)
-	os.MkdirAll(filepath.Join(dir, "svc", ".liste"), 0755)
+	mustMkdir(t, filepath.Join(dir, ".liste"))
+	mustMkdir(t, filepath.Join(dir, "svc", ".liste"))
 
 	result, err := Discover(dir)
 	if err != nil {

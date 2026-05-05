@@ -139,7 +139,9 @@ func TestStoreDeleteItem(t *testing.T) {
 	mustInit(t, s, "test")
 
 	cfg, _ := s.ReadConfig()
-	s.CreateItem(model.TypeFeature, "To Delete", cfg)
+	if _, err := s.CreateItem(model.TypeFeature, "To Delete", cfg); err != nil {
+		t.Fatal(err)
+	}
 
 	if err := s.DeleteItem("FEAT-001"); err != nil {
 		t.Fatalf("DeleteItem failed: %v", err)
