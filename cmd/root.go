@@ -7,13 +7,15 @@ import (
 	"github.com/pblca/liste/internal/discovery"
 	"github.com/pblca/liste/internal/output"
 	"github.com/pblca/liste/internal/store"
+	"github.com/pblca/liste/internal/tui"
 	"github.com/spf13/cobra"
 )
 
 var (
-	flagJSON    bool
-	flagQuiet   bool
-	flagProject string
+	flagJSON        bool
+	flagQuiet       bool
+	flagProject     string
+	flagInteractive bool
 )
 
 var rootCmd = &cobra.Command{
@@ -26,6 +28,30 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&flagJSON, "json", false, "Output in JSON format")
 	rootCmd.PersistentFlags().BoolVar(&flagQuiet, "quiet", false, "Minimal output (IDs only)")
 	rootCmd.PersistentFlags().StringVarP(&flagProject, "project", "p", "", "Target a specific sub-project")
+	rootCmd.PersistentFlags().BoolVarP(&flagInteractive, "interactive", "i", false, "Launch interactive TUI")
+
+	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+		if !flagInteractive {
+			return nil
+		}
+		if flagJSON || flagQuiet {
+			return fmt.Errorf("--interactive cannot be used with --json or --quiet")
+		}
+		result, err := getDiscovery()
+		if err != nil {
+			return err
+		}
+		rootStore := store.New(result.Root)
+		cfg, err := rootStore.ReadConfig()
+		if err != nil {
+			return err
+		}
+		if err := tui.Run(result, cfg); err != nil {
+			return err
+		}
+		os.Exit(0)
+		return nil
+	}
 }
 
 // Execute runs the root command.
