@@ -37,8 +37,8 @@ brews:
   - name: liste
     repository:
       owner: pufferhaus
-      name: homebrew-liste
-      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
+      name: liste
+      token: "{{ .Env.GITHUB_TOKEN }}"
     directory: Formula
     homepage: "https://github.com/pufferhaus/liste"
     description: "Portable CLI roadmap tracker for humans and AI agents"
@@ -51,8 +51,9 @@ brews:
 scoops:
   - repository:
       owner: pufferhaus
-      name: scoop-liste
-      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
+      name: liste
+      token: "{{ .Env.GITHUB_TOKEN }}"
+    directory: bucket
     homepage: "https://github.com/pufferhaus/liste"
     description: "Portable CLI roadmap tracker for humans and AI agents"
     license: "MIT"
