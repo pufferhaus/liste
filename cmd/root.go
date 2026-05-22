@@ -22,6 +22,14 @@ var rootCmd = &cobra.Command{
 	Use:   "liste",
 	Short: "Portable roadmap and project tracker",
 	Long:  "A CLI tool for managing project roadmaps as markdown files. Designed for both humans and AI agents.",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// Allows `liste -i` to launch the TUI without a subcommand.
+		// Without a RunE, cobra skips PersistentPreRunE on bare invocation.
+		if !flagInteractive {
+			return cmd.Help()
+		}
+		return nil
+	},
 }
 
 func init() {

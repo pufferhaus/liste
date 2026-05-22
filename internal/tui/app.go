@@ -136,6 +136,13 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if m.blockInput != nil {
 		return m.updateBlockInput(msg)
 	}
+	// CloseDetailMsg must be checked before the overlay guard — the overlay
+	// being open means all messages are routed there, so CloseDetailMsg would
+	// never reach the switch below without this early check.
+	if _, ok := msg.(CloseDetailMsg); ok {
+		m.overlay = nil
+		return m, nil
+	}
 	if m.overlay != nil {
 		return m.updateOverlay(msg)
 	}

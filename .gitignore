@@ -3,6 +3,7 @@ liste
 liste.exe
 liste-*
 !demo/liste-demo.gif
+!demo/liste-tui-demo.gif
 dist/
 
 # IDE
