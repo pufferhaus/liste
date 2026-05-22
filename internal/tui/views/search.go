@@ -18,12 +18,13 @@ var searchInputStyle = lipgloss.NewStyle().
 
 // SearchView provides a text input that filters items in real time.
 type SearchView struct {
-	input    textinput.Model
-	list     list.Model
-	allItems []*model.Item
-	store    *store.Store
-	width    int
-	height   int
+	input     textinput.Model
+	list      list.Model
+	allItems  []*model.Item
+	store     *store.Store
+	width     int
+	height    int
+	lastQuery string
 }
 
 // NewSearchView creates the search view.
@@ -79,18 +80,21 @@ func (m SearchView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	cmds = append(cmds, inputCmd)
 
 	query := strings.ToLower(m.input.Value())
-	if query != "" {
-		var filtered []*model.Item
-		for _, item := range m.allItems {
-			if strings.Contains(strings.ToLower(item.Title), query) ||
-				strings.Contains(strings.ToLower(item.ID), query) ||
-				containsTag(item.Tags, query) {
-				filtered = append(filtered, item)
+	if query != m.lastQuery {
+		m.lastQuery = query
+		if query != "" {
+			var filtered []*model.Item
+			for _, item := range m.allItems {
+				if strings.Contains(strings.ToLower(item.Title), query) ||
+					strings.Contains(strings.ToLower(item.ID), query) ||
+					containsTag(item.Tags, query) {
+					filtered = append(filtered, item)
+				}
 			}
+			m.list.SetItems(ItemsToListItems(filtered))
+		} else {
+			m.list.SetItems(ItemsToListItems(m.allItems))
 		}
-		m.list.SetItems(ItemsToListItems(filtered))
-	} else {
-		m.list.SetItems(ItemsToListItems(m.allItems))
 	}
 
 	var listCmd tea.Cmd

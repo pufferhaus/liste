@@ -32,7 +32,13 @@ type DetailModel struct {
 // NewDetailModel creates a detail overlay for the given item.
 func NewDetailModel(item *model.Item, width, height int) DetailModel {
 	innerW := width - 4
+	if innerW < 1 {
+		innerW = 1
+	}
 	innerH := height - 4
+	if innerH < 1 {
+		innerH = 1
+	}
 	vp := viewport.New(innerW, innerH)
 	vp.SetContent(renderDetail(item, innerW))
 	return DetailModel{item: item, viewport: vp, width: width, height: height}
@@ -98,9 +104,17 @@ func (m DetailModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
-		m.viewport.Width = msg.Width - 4
-		m.viewport.Height = msg.Height - 4
-		m.viewport.SetContent(renderDetail(m.item, msg.Width-4))
+		vw := msg.Width - 4
+		if vw < 1 {
+			vw = 1
+		}
+		vh := msg.Height - 4
+		if vh < 1 {
+			vh = 1
+		}
+		m.viewport.Width = vw
+		m.viewport.Height = vh
+		m.viewport.SetContent(renderDetail(m.item, vw))
 	}
 	var cmd tea.Cmd
 	m.viewport, cmd = m.viewport.Update(msg)

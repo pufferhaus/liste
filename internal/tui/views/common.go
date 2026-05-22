@@ -2,6 +2,7 @@ package views
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/lipgloss"
@@ -41,14 +42,14 @@ func (i ListItem) FilterValue() string {
 }
 
 func joinTags(tags []string) string {
-	result := ""
+	var sb strings.Builder
 	for i, t := range tags {
 		if i > 0 {
-			result += " #"
+			sb.WriteString(" #")
 		}
-		result += t
+		sb.WriteString(t)
 	}
-	return result
+	return sb.String()
 }
 
 // ItemsToListItems converts model items to bubbles list items.
