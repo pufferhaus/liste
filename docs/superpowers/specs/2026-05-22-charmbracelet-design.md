@@ -72,7 +72,7 @@ medium   → default
 low      → dimmed
 ```
 
-**roadmap.go** — inline `fmt.Fprintf` rendering pulled into `Formatter` so it picks up the same styles. Phase headers rendered bold with a subtle separator line. `roadmap.go`'s `renderRoadmapTable` and `renderPhaseDetail` functions delegated to formatter methods.
+**roadmap.go** — `renderRoadmapTable` and `renderPhaseDetail` delegated to new `Formatter` methods so they pick up lipgloss styles. Phase headers rendered bold with a subtle separator line. `renderRoadmapJSON` stays in `roadmap.go` — only table paths move to the Formatter.
 
 **NO_COLOR** — respected automatically via lipgloss's built-in env var detection. Degrades to plain text with no code changes needed.
 
@@ -191,7 +191,7 @@ tab / shift+tab    cycle views
 enter              open detail overlay
 esc                close overlay / clear search filter
 d                  mark current item done (writes through store)
-b                  mark current item blocked (inline huh prompt for reason)
+b                  mark current item blocked (huh form embedded as bubbletea model for reason input)
 /                  focus search input (search view) / filter (list views)
 q / ctrl+c         quit
 ```
