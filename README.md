@@ -27,17 +27,17 @@ Items are stored as individual markdown files with YAML frontmatter in a `.liste
 brew install pufferhaus/liste/liste
 ```
 
+### Go install
+
+```bash
+go install github.com/pufferhaus/liste@latest
+```
+
 ### Scoop (Windows)
 
 ```bash
 scoop bucket add liste https://github.com/pufferhaus/liste
 scoop install liste
-```
-
-### Go install
-
-```bash
-go install github.com/pufferhaus/liste@latest
 ```
 
 ### Release binaries
