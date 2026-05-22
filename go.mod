@@ -1,4 +1,4 @@
-module github.com/pblca/liste
+module github.com/pufferhaus/liste
 
 go 1.26
 

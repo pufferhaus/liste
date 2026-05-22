@@ -1,0 +1,54 @@
+<h2>Color scheme for styled output</h2>
+<p class="subtitle">How should status badges, priority, and type badges be colored?</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#1a1a2e;padding:16px;border-radius:6px;font-family:'Courier New',monospace;font-size:12px;line-height:2">
+        <div style="color:#888;margin-bottom:6px">ID &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; TYPE &nbsp;&nbsp;&nbsp; STATUS &nbsp;&nbsp; PRIORITY &nbsp; TITLE</div>
+        <div><span style="color:#aaa">FEAT-001</span> &nbsp;<span style="background:#6c3483;color:#fff;padding:1px 5px;border-radius:3px">feature</span> &nbsp;<span style="background:#1a7a4a;color:#fff;padding:1px 5px;border-radius:3px">active</span> &nbsp;&nbsp;<span style="color:#e67e22">high</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; User authentication</div>
+        <div><span style="color:#aaa">BUG-002</span> &nbsp;&nbsp;<span style="background:#7b241c;color:#fff;padding:1px 5px;border-radius:3px">bug</span> &nbsp;&nbsp;&nbsp;&nbsp;<span style="background:#7b241c;color:#fff;padding:1px 5px;border-radius:3px">blocked</span> &nbsp;<span style="color:#e74c3c;font-weight:bold">critical</span> &nbsp;&nbsp; Login timeout</div>
+        <div><span style="color:#aaa">TASK-003</span> &nbsp;<span style="background:#1a5276;color:#fff;padding:1px 5px;border-radius:3px">task</span> &nbsp;&nbsp;&nbsp;<span style="background:#2c3e50;color:#aaa;padding:1px 5px;border-radius:3px">done</span> &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#888">low</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Write tests</div>
+        <div><span style="color:#aaa">IDEA-004</span> &nbsp;<span style="background:#7d6608;color:#fff;padding:1px 5px;border-radius:3px">idea</span> &nbsp;&nbsp;&nbsp;<span style="background:#1b4f72;color:#fff;padding:1px 5px;border-radius:3px">planned</span> &nbsp;<span style="color:#aaa">medium</span> &nbsp;&nbsp;&nbsp; Dark mode support</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Pill badges</h3>
+      <p>Colored background pills for type + status. Priority as colored text only. Dimmed done items.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#1a1a2e;padding:16px;border-radius:6px;font-family:'Courier New',monospace;font-size:12px;line-height:2">
+        <div style="color:#888;margin-bottom:6px">ID &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; TYPE &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; STATUS &nbsp;&nbsp;&nbsp;&nbsp; PRIORITY &nbsp; TITLE</div>
+        <div><span style="color:#aaa">FEAT-001</span> &nbsp;<span style="color:#a29bfe">■ feature</span> &nbsp;&nbsp;<span style="color:#00b894">● active</span> &nbsp;&nbsp;&nbsp;<span style="color:#fdcb6e">▲ high</span> &nbsp;&nbsp;&nbsp;&nbsp; User authentication</div>
+        <div><span style="color:#aaa">BUG-002</span> &nbsp;&nbsp;<span style="color:#ff7675">■ bug</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#e17055">⊘ blocked</span> &nbsp;<span style="color:#d63031">▲ critical</span> &nbsp; Login timeout</div>
+        <div style="color:#555"><span>TASK-003</span> &nbsp;<span>■ task</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span>✓ done</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span>▽ low</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Write tests</div>
+        <div><span style="color:#aaa">IDEA-004</span> &nbsp;<span style="color:#ffeaa7">■ idea</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#74b9ff">○ planned</span> &nbsp;<span style="color:#b2bec3">▸ medium</span> &nbsp; Dark mode support</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Symbols + color text</h3>
+      <p>Unicode symbols as type/status indicators. No background pills — color only. Done rows fully dimmed.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#1a1a2e;padding:16px;border-radius:6px;font-family:'Courier New',monospace;font-size:12px;line-height:2">
+        <div style="color:#888;border-bottom:1px solid #333;margin-bottom:6px;padding-bottom:4px">ID &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; TYPE &nbsp;&nbsp;&nbsp; STATUS &nbsp;&nbsp; PRIORITY &nbsp; TITLE</div>
+        <div style="border-left:3px solid #00b894;padding-left:8px"><span style="color:#aaa">FEAT-001</span> &nbsp;<span style="color:#a29bfe">feature</span> &nbsp;<span style="color:#00b894;font-weight:bold">active</span> &nbsp;&nbsp;&nbsp;<span style="color:#fdcb6e">high</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; User authentication</div>
+        <div style="border-left:3px solid #e17055;padding-left:8px"><span style="color:#aaa">BUG-002</span> &nbsp;&nbsp;<span style="color:#ff7675">bug</span> &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#e17055;font-weight:bold">blocked</span> &nbsp;<span style="color:#d63031">critical</span> &nbsp;&nbsp; Login timeout</div>
+        <div style="border-left:3px solid #555;padding-left:8px;color:#555"><span>TASK-003</span> &nbsp;<span>task</span> &nbsp;&nbsp;&nbsp;<span>done</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span>low</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Write tests</div>
+        <div style="border-left:3px solid #74b9ff;padding-left:8px"><span style="color:#aaa">IDEA-004</span> &nbsp;<span style="color:#ffeaa7">idea</span> &nbsp;&nbsp;&nbsp;<span style="color:#74b9ff">planned</span> &nbsp;<span style="color:#b2bec3">medium</span> &nbsp;&nbsp;&nbsp; Dark mode support</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Left border accent</h3>
+      <p>Colored left border per row (keyed to status). No pills. Clean, minimal — text-only color.</p>
+    </div>
+  </div>
+
+</div>

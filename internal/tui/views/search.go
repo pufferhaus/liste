@@ -7,8 +7,8 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/pblca/liste/internal/model"
-	"github.com/pblca/liste/internal/store"
+	"github.com/pufferhaus/liste/internal/model"
+	"github.com/pufferhaus/liste/internal/store"
 )
 
 var searchInputStyle = lipgloss.NewStyle().

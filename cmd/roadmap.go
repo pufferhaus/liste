@@ -7,9 +7,9 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/pblca/liste/internal/model"
-	"github.com/pblca/liste/internal/output"
-	"github.com/pblca/liste/internal/store"
+	"github.com/pufferhaus/liste/internal/model"
+	"github.com/pufferhaus/liste/internal/output"
+	"github.com/pufferhaus/liste/internal/store"
 	"github.com/spf13/cobra"
 )
 

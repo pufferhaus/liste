@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	listeskills "github.com/pblca/liste/skills"
+	listeskills "github.com/pufferhaus/liste/skills"
 )
 
 func TestSkillsEmbed(t *testing.T) {

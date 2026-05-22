@@ -3,7 +3,7 @@ package model_test
 import (
 	"testing"
 
-	"github.com/pblca/liste/internal/model"
+	"github.com/pufferhaus/liste/internal/model"
 )
 
 func TestTUIConfigResolvedDefaults(t *testing.T) {

@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pblca/liste/internal/model"
+	"github.com/pufferhaus/liste/internal/model"
 )
 
 func TestParseItem(t *testing.T) {

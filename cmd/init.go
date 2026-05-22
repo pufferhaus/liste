@@ -8,7 +8,7 @@ import (
 
 	"github.com/charmbracelet/huh"
 	"github.com/mattn/go-isatty"
-	"github.com/pblca/liste/internal/store"
+	"github.com/pufferhaus/liste/internal/store"
 	"github.com/spf13/cobra"
 )
 

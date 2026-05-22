@@ -5,8 +5,8 @@ import (
 
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/pblca/liste/internal/model"
-	"github.com/pblca/liste/internal/store"
+	"github.com/pufferhaus/liste/internal/model"
+	"github.com/pufferhaus/liste/internal/store"
 )
 
 // NextView shows the priority-sorted queue of items ready to work on.

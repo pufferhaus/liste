@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/pblca/liste/cmd"
+	"github.com/pufferhaus/liste/cmd"
 )
 
 // Set via ldflags at build time.

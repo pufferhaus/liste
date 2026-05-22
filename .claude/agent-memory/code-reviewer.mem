@@ -1,0 +1,5 @@
+pat|huh-forms-hardcoded-options|Priority select in cmd/add.go:runAddInteractive() hardcodes critical/high/medium/low but should use cfg.Priorities for custom configs|1
+err|ignored-parse-error|cmd/add.go:172 ignores ParseItemType error with t,_ := model.ParseItemType(itemType) - safe since select is hardcoded but poor style|1
+pat|perf|SearchView filters on every Update even when query unchanged|2|internal/tui/views/search.go:81-94
+pat|style|String concat in loop (+=) instead of strings.Builder|1|internal/tui/views/common.go:43-51
+err|safety|Width underflow not checked (width-4)|1|internal/tui/detail.go:34,101,103

@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
-	listeskills "github.com/pblca/liste/skills"
+	listeskills "github.com/pufferhaus/liste/skills"
 	"github.com/spf13/cobra"
 )
 
@@ -90,8 +90,8 @@ func installSkills(claudeRoot, version string) error {
   "name": "liste",
   "description": "Claude Code skills for the liste CLI roadmap tracker.",
   "author": {
-    "name": "pblca",
-    "url": "https://github.com/pblca/liste"
+    "name": "pufferhaus",
+    "url": "https://github.com/pufferhaus/liste"
   }
 }`
 	if err := os.WriteFile(filepath.Join(pluginDir, "plugin.json"), []byte(pluginJSON), 0644); err != nil {

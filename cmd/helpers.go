@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"github.com/pblca/liste/internal/model"
-	"github.com/pblca/liste/internal/store"
+	"github.com/pufferhaus/liste/internal/model"
+	"github.com/pufferhaus/liste/internal/store"
 )
 
 // itemWithProject pairs an item with its owning project name.

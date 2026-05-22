@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/pblca/liste/internal/resolver"
+	"github.com/pufferhaus/liste/internal/resolver"
 	"github.com/spf13/cobra"
 )
 

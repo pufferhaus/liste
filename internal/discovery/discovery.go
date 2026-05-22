@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/pblca/liste/internal/store"
+	"github.com/pufferhaus/liste/internal/store"
 )
 
 const roadmapDir = ".liste"

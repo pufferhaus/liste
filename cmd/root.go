@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/pblca/liste/internal/discovery"
-	"github.com/pblca/liste/internal/output"
-	"github.com/pblca/liste/internal/store"
-	"github.com/pblca/liste/internal/tui"
+	"github.com/pufferhaus/liste/internal/discovery"
+	"github.com/pufferhaus/liste/internal/output"
+	"github.com/pufferhaus/liste/internal/store"
+	"github.com/pufferhaus/liste/internal/tui"
 	"github.com/spf13/cobra"
 )
 

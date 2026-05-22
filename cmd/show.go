@@ -3,8 +3,8 @@ package cmd
 import (
 	"strings"
 
-	"github.com/pblca/liste/internal/output"
-	"github.com/pblca/liste/internal/resolver"
+	"github.com/pufferhaus/liste/internal/output"
+	"github.com/pufferhaus/liste/internal/resolver"
 	"github.com/spf13/cobra"
 )
 

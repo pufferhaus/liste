@@ -82,7 +82,7 @@ package model_test
 import (
 	"testing"
 
-	"github.com/pblca/liste/internal/model"
+	"github.com/pufferhaus/liste/internal/model"
 )
 
 func TestTUIConfigResolvedDefaults(t *testing.T) {
@@ -197,7 +197,7 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/pblca/liste/internal/output"
+	"github.com/pufferhaus/liste/internal/output"
 )
 
 // stripANSI removes ANSI escape codes so we can test text content.
@@ -286,7 +286,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/pblca/liste/internal/model"
+	"github.com/pufferhaus/liste/internal/model"
 )
 
 var (
@@ -414,7 +414,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pblca/liste/internal/model"
+	"github.com/pufferhaus/liste/internal/model"
 )
 
 func makeTestItem(id, typ, status, priority string) *model.Item {
@@ -781,7 +781,7 @@ git commit -m "feat: apply lipgloss styling to StatusSummary and ItemCreated"
 
 - [ ] **Step 1: Update renderRoadmapTable in cmd/roadmap.go**
 
-Add `"github.com/pblca/liste/internal/output"` to the import block in `cmd/roadmap.go`.
+Add `"github.com/pufferhaus/liste/internal/output"` to the import block in `cmd/roadmap.go`.
 
 Replace `renderRoadmapTable` with:
 
@@ -905,8 +905,8 @@ import (
 
 	"github.com/charmbracelet/huh"
 	"github.com/mattn/go-isatty"
-	"github.com/pblca/liste/internal/model"
-	"github.com/pblca/liste/internal/store"
+	"github.com/pufferhaus/liste/internal/model"
+	"github.com/pufferhaus/liste/internal/store"
 	"github.com/spf13/cobra"
 )
 
@@ -1153,7 +1153,7 @@ import (
 
 	"github.com/charmbracelet/huh"
 	"github.com/mattn/go-isatty"
-	"github.com/pblca/liste/internal/store"
+	"github.com/pufferhaus/liste/internal/store"
 	"github.com/spf13/cobra"
 )
 
@@ -1270,8 +1270,8 @@ import (
 	"fmt"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/pblca/liste/internal/model"
-	"github.com/pblca/liste/internal/output"
+	"github.com/pufferhaus/liste/internal/model"
+	"github.com/pufferhaus/liste/internal/output"
 )
 
 // ListItem wraps model.Item to implement bubbles list.Item.
@@ -1337,8 +1337,8 @@ import (
 
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/pblca/liste/internal/model"
-	"github.com/pblca/liste/internal/output"
+	"github.com/pufferhaus/liste/internal/model"
+	"github.com/pufferhaus/liste/internal/output"
 )
 ```
 
@@ -1352,8 +1352,8 @@ package views
 import (
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/pblca/liste/internal/model"
-	"github.com/pblca/liste/internal/store"
+	"github.com/pufferhaus/liste/internal/model"
+	"github.com/pufferhaus/liste/internal/store"
 )
 
 // ItemSelectedMsg is sent when the user presses enter on an item.
@@ -1439,8 +1439,8 @@ package views
 import (
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/pblca/liste/internal/model"
-	"github.com/pblca/liste/internal/store"
+	"github.com/pufferhaus/liste/internal/model"
+	"github.com/pufferhaus/liste/internal/store"
 )
 
 // BlockedView shows only blocked items.
@@ -1519,8 +1519,8 @@ import (
 
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/pblca/liste/internal/model"
-	"github.com/pblca/liste/internal/store"
+	"github.com/pufferhaus/liste/internal/model"
+	"github.com/pufferhaus/liste/internal/store"
 )
 
 // NextView shows the priority-sorted queue of items ready to work on.
@@ -1688,8 +1688,8 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/pblca/liste/internal/model"
-	"github.com/pblca/liste/internal/store"
+	"github.com/pufferhaus/liste/internal/model"
+	"github.com/pufferhaus/liste/internal/store"
 )
 
 var searchInputStyle = lipgloss.NewStyle().
@@ -1847,9 +1847,9 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/pblca/liste/internal/model"
-	"github.com/pblca/liste/internal/output"
-	"github.com/pblca/liste/internal/store"
+	"github.com/pufferhaus/liste/internal/model"
+	"github.com/pufferhaus/liste/internal/output"
+	"github.com/pufferhaus/liste/internal/store"
 )
 
 var (
@@ -2042,8 +2042,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/pblca/liste/internal/model"
-	"github.com/pblca/liste/internal/output"
+	"github.com/pufferhaus/liste/internal/model"
+	"github.com/pufferhaus/liste/internal/output"
 )
 
 var (
@@ -2181,8 +2181,8 @@ import (
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/pblca/liste/internal/model"
-	"github.com/pblca/liste/internal/tui"
+	"github.com/pufferhaus/liste/internal/model"
+	"github.com/pufferhaus/liste/internal/tui"
 )
 
 func TestTabCyclesForward(t *testing.T) {
@@ -2247,10 +2247,10 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/pblca/liste/internal/discovery"
-	"github.com/pblca/liste/internal/model"
-	"github.com/pblca/liste/internal/store"
-	"github.com/pblca/liste/internal/tui/views"
+	"github.com/pufferhaus/liste/internal/discovery"
+	"github.com/pufferhaus/liste/internal/model"
+	"github.com/pufferhaus/liste/internal/store"
+	"github.com/pufferhaus/liste/internal/tui/views"
 )
 
 var (
@@ -2595,10 +2595,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/pblca/liste/internal/discovery"
-	"github.com/pblca/liste/internal/output"
-	"github.com/pblca/liste/internal/store"
-	"github.com/pblca/liste/internal/tui"
+	"github.com/pufferhaus/liste/internal/discovery"
+	"github.com/pufferhaus/liste/internal/output"
+	"github.com/pufferhaus/liste/internal/store"
+	"github.com/pufferhaus/liste/internal/tui"
 	"github.com/spf13/cobra"
 )
 

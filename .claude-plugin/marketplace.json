@@ -3,8 +3,8 @@
   "name": "liste",
   "description": "Claude Code skills for the liste CLI roadmap tracker",
   "owner": {
-    "name": "pblca",
-    "url": "https://github.com/pblca/liste"
+    "name": "pufferhaus",
+    "url": "https://github.com/pufferhaus/liste"
   },
   "plugins": [
     {

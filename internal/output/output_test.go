@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pblca/liste/internal/model"
-	"github.com/pblca/liste/internal/output"
+	"github.com/pufferhaus/liste/internal/model"
+	"github.com/pufferhaus/liste/internal/output"
 )
 
 // stripANSI removes ANSI escape codes so we can test text content.

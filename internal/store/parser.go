@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pblca/liste/internal/model"
+	"github.com/pufferhaus/liste/internal/model"
 	"gopkg.in/yaml.v3"
 )
 

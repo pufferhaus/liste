@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/pblca/liste/internal/model"
+	"github.com/pufferhaus/liste/internal/model"
 
 	"github.com/spf13/cobra"
 )

@@ -9,17 +9,17 @@ Items are stored as individual markdown files with YAML frontmatter in a `.liste
 ### From source
 
 ```bash
-go install github.com/pblca/liste@latest
+go install github.com/pufferhaus/liste@latest
 ```
 
 ### From release binaries
 
-Download the latest binary for your platform from [Releases](https://github.com/pblca/liste/releases).
+Download the latest binary for your platform from [Releases](https://github.com/pufferhaus/liste/releases).
 
 ### Build locally
 
 ```bash
-git clone https://github.com/pblca/liste.git
+git clone https://github.com/pufferhaus/liste.git
 cd liste
 go build -o liste .
 ```

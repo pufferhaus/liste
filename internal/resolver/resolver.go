@@ -1,8 +1,8 @@
 package resolver
 
 import (
-	"github.com/pblca/liste/internal/model"
-	"github.com/pblca/liste/internal/store"
+	"github.com/pufferhaus/liste/internal/model"
+	"github.com/pufferhaus/liste/internal/store"
 )
 
 // InverseLink represents a link from another item pointing at a given item.

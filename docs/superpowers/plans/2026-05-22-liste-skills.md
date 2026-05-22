@@ -60,8 +60,8 @@ Write `.claude-plugin/plugin.json`:
   "name": "liste",
   "description": "Claude Code skills for the liste CLI roadmap tracker. Teaches agents to record bugs, track progress, manage dependencies, and keep roadmaps current during development.",
   "author": {
-    "name": "pblca",
-    "url": "https://github.com/pblca/liste"
+    "name": "pufferhaus",
+    "url": "https://github.com/pufferhaus/liste"
   }
 }
 ```
@@ -76,8 +76,8 @@ Write `.claude-plugin/marketplace.json`:
   "name": "liste",
   "description": "Claude Code skills for the liste CLI roadmap tracker",
   "owner": {
-    "name": "pblca",
-    "url": "https://github.com/pblca/liste"
+    "name": "pufferhaus",
+    "url": "https://github.com/pufferhaus/liste"
   },
   "plugins": [
     {
@@ -1083,7 +1083,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/pblca/liste/internal/skills"
+	"github.com/pufferhaus/liste/internal/skills"
 )
 
 func TestSkillsEmbed(t *testing.T) {
@@ -1177,7 +1177,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/pblca/liste/internal/skills"
+	"github.com/pufferhaus/liste/internal/skills"
 	"github.com/spf13/cobra"
 )
 
@@ -1258,8 +1258,8 @@ func installSkills(claudeRoot, version string) error {
   "name": "liste",
   "description": "Claude Code skills for the liste CLI roadmap tracker.",
   "author": {
-    "name": "pblca",
-    "url": "https://github.com/pblca/liste"
+    "name": "pufferhaus",
+    "url": "https://github.com/pufferhaus/liste"
   }
 }`
 	if err := os.WriteFile(filepath.Join(pluginDir, "plugin.json"), []byte(pluginJSON), 0644); err != nil {

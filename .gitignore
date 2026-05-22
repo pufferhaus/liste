@@ -17,3 +17,6 @@ Thumbs.db
 # Test artifacts
 coverage.out
 .worktrees/
+
+.superpowers/
+.claude/agent-memory/
