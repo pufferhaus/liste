@@ -133,6 +133,64 @@ func TestItemListDoneRowsDimmed(t *testing.T) {
 	}
 }
 
+func TestItemDetailTableContainsExpectedFields(t *testing.T) {
+	var buf bytes.Buffer
+	f := output.New(&buf, output.FormatTable)
+
+	item := makeTestItem("FEAT-001", "feature", "active", "high")
+	item.Tags = []string{"backend", "auth"}
+	item.Body = "## Description\n\nDoes the thing."
+
+	f.ItemDetail(item, nil)
+
+	got := stripANSI(buf.String())
+	for _, want := range []string{"FEAT-001", "■ feature", "● active", "▲ high", "backend", "auth", "Description", "Does the thing"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("ItemDetail missing %q\ngot:\n%s", want, got)
+		}
+	}
+}
+
+func TestItemDetailBlockedShown(t *testing.T) {
+	var buf bytes.Buffer
+	f := output.New(&buf, output.FormatTable)
+	item := makeTestItem("BUG-001", "bug", "active", "critical")
+	item.Blocked = &model.Blocked{Reason: "OAuth approval pending"}
+	f.ItemDetail(item, nil)
+
+	got := stripANSI(buf.String())
+	if !strings.Contains(got, "OAuth approval pending") {
+		t.Errorf("block reason not shown, got:\n%s", got)
+	}
+}
+
+func TestStatusSummaryContainsStyledStatus(t *testing.T) {
+	var buf bytes.Buffer
+	f := output.New(&buf, output.FormatTable)
+	items := []*model.Item{
+		makeTestItem("FEAT-001", "feature", "active", "high"),
+		makeTestItem("BUG-002", "bug", "done", "low"),
+	}
+	f.StatusSummary(items, "my-project")
+	got := stripANSI(buf.String())
+	for _, want := range []string{"● active", "✓ done", "FEAT-001", "BUG-002"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("StatusSummary missing %q\ngot:\n%s", want, got)
+		}
+	}
+}
+
+func TestItemCreatedContainsID(t *testing.T) {
+	var buf bytes.Buffer
+	f := output.New(&buf, output.FormatTable)
+	item := makeTestItem("FEAT-001", "feature", "idea", "medium")
+	f.ItemCreated(item)
+	got := stripANSI(buf.String())
+	if !strings.Contains(got, "FEAT-001") {
+		t.Errorf("ItemCreated missing ID, got:\n%s", got)
+	}
+}
+
 func TestRenderPhaseHeader(t *testing.T) {
 	got := stripANSI(output.RenderPhaseHeader(1, "active", 2, 5))
 	if !strings.Contains(got, "PHASE 1") {

@@ -6,6 +6,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/pblca/liste/internal/model"
 )
@@ -130,8 +131,15 @@ func (f *Formatter) ItemCreated(item *model.Item) {
 	case FormatQuiet:
 		fmt.Fprintln(f.Writer, item.ID)
 	default:
-		fmt.Fprintf(f.Writer, "Created %s: %s\n", item.ID, item.Title)
-		fmt.Fprintf(f.Writer, "  Type: %s | Status: %s | Priority: %s\n", item.Type, item.Status, item.Priority)
+		fmt.Fprintf(f.Writer, "Created %s: %s\n",
+			styleHeader.Render(item.ID),
+			item.Title,
+		)
+		fmt.Fprintf(f.Writer, "  %s  %s  %s\n",
+			RenderType(string(item.Type)),
+			RenderStatus(item.Status, false),
+			RenderPriority(item.Priority),
+		)
 	}
 }
 
@@ -161,9 +169,22 @@ func (f *Formatter) ItemDetail(item *model.Item, inverseLinks []InverseLinkDispl
 	case FormatQuiet:
 		fmt.Fprintln(f.Writer, item.ID)
 	default:
-		fmt.Fprintf(f.Writer, "%-8s %s\n", item.ID, item.Title)
-		fmt.Fprintf(f.Writer, "Type: %s | Status: %s | Priority: %s\n", item.Type, item.Status, item.Priority)
-		fmt.Fprintf(f.Writer, "Created: %s | Updated: %s\n", item.Created.Format("2006-01-02"), item.Updated.Format("2006-01-02"))
+		// Header line
+		fmt.Fprintf(f.Writer, "%s  %s\n",
+			styleHeader.Render(item.ID),
+			item.Title,
+		)
+		// Metadata row
+		fmt.Fprintf(f.Writer, "%s  %s  %s\n",
+			RenderType(string(item.Type)),
+			RenderStatus(item.Status, item.Blocked != nil),
+			RenderPriority(item.Priority),
+		)
+		fmt.Fprintf(f.Writer, "%s  Created: %s  Updated: %s\n",
+			styleFaint.Render("·"),
+			styleFaint.Render(item.Created.Format("2006-01-02")),
+			styleFaint.Render(item.Updated.Format("2006-01-02")),
+		)
 
 		if len(item.Tags) > 0 {
 			fmt.Fprintf(f.Writer, "Tags: %s\n", strings.Join(item.Tags, ", "))
@@ -173,26 +194,33 @@ func (f *Formatter) ItemDetail(item *model.Item, inverseLinks []InverseLinkDispl
 			if reason == "" {
 				reason = "(no reason)"
 			}
-			fmt.Fprintf(f.Writer, "BLOCKED: %s\n", reason)
+			fmt.Fprintf(f.Writer, "%s %s\n", styleStatusBlocked.Render("⊘ BLOCKED:"), reason)
 		}
 		if len(item.Links) > 0 {
-			fmt.Fprintln(f.Writer, "\nLinks:")
+			fmt.Fprintln(f.Writer, "\n"+styleHeader.Render("Links:"))
 			for _, l := range item.Links {
 				proj := ""
 				if l.Project != "" {
-					proj = " [" + l.Project + "]"
+					proj = "  [" + l.Project + "]"
 				}
-				fmt.Fprintf(f.Writer, "  %s %s%s\n", l.Type, l.Target, proj)
+				fmt.Fprintf(f.Writer, "  %s %s%s\n", styleFaint.Render(string(l.Type)), l.Target, proj)
 			}
 		}
 		if len(inverseLinks) > 0 {
-			fmt.Fprintln(f.Writer, "\nReferenced by:")
+			fmt.Fprintln(f.Writer, "\n"+styleHeader.Render("Referenced by:"))
 			for _, l := range inverseLinks {
-				fmt.Fprintf(f.Writer, "  %s %s\n", l.Type, l.SourceID)
+				fmt.Fprintf(f.Writer, "  %s %s\n", styleFaint.Render(l.Type), l.SourceID)
 			}
 		}
 		if item.Body != "" {
-			fmt.Fprintf(f.Writer, "\n%s\n", item.Body)
+			fmt.Fprintln(f.Writer)
+			rendered, err := glamour.Render(item.Body, "auto")
+			if err != nil {
+				// Fall back to raw body on any glamour error
+				fmt.Fprintf(f.Writer, "%s\n", item.Body)
+			} else {
+				fmt.Fprint(f.Writer, rendered)
+			}
 		}
 	}
 }
@@ -303,7 +331,8 @@ func (f *Formatter) StatusSummary(items []*model.Item, projectName string) {
 	case FormatQuiet:
 		fmt.Fprintf(f.Writer, "%d items\n", len(items))
 	default:
-		fmt.Fprintf(f.Writer, "Project: %s (%d items)\n\n", projectName, len(items))
+		fmt.Fprintf(f.Writer, "%s  (%d items)\n\n",
+			styleHeader.Render("Project: "+projectName), len(items))
 
 		statusOrder := []string{"active", "planned", "blocked", "idea", "done", "cancelled"}
 		for _, status := range statusOrder {
@@ -311,10 +340,14 @@ func (f *Formatter) StatusSummary(items []*model.Item, projectName string) {
 			if !ok || len(group) == 0 {
 				continue
 			}
-			label := strings.ToUpper(status)
+			label := RenderStatus(status, status == "blocked")
 			fmt.Fprintf(f.Writer, "%s (%d)\n", label, len(group))
 			for _, item := range group {
-				fmt.Fprintf(f.Writer, "  %-10s [%s] %s\n", item.ID, item.Priority, item.Title)
+				fmt.Fprintf(f.Writer, "  %-10s  %s  %s\n",
+					item.ID,
+					RenderPriority(item.Priority),
+					item.Title,
+				)
 			}
 			fmt.Fprintln(f.Writer)
 		}
