@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/pblca/liste/internal/model"
+	"github.com/pblca/liste/internal/output"
 	"github.com/pblca/liste/internal/store"
 	"github.com/spf13/cobra"
 )
@@ -187,70 +188,58 @@ func phaseGroupProgress(pg phaseGroup) (int, int) {
 }
 
 func renderRoadmapTable(phases []phaseGroup, unphased []projectItems) {
-	// Detect which phase is "active" — first non-complete with active items
-	// If no phase has active items, first non-complete is "upcoming"
-	foundActive := false
-
 	for _, pg := range phases {
 		status := detectPhaseStatus(pg)
 		done, total := phaseGroupProgress(pg)
 
 		if status == phaseComplete {
-			// Collapsed view for complete phases
-			fmt.Fprintf(os.Stdout, "PHASE %d (complete - %d/%d)\n\n", pg.Phase, done, total)
+			fmt.Fprintln(os.Stdout, output.RenderPhaseHeader(pg.Phase, "complete", done, total))
+			fmt.Fprintln(os.Stdout)
 			continue
 		}
 
-		if !foundActive && status == phaseActive {
-			foundActive = true
-		}
-
-		label := string(status)
-		if !foundActive && status == phaseUpcoming {
-			label = "upcoming"
-		}
-
-		fmt.Fprintf(os.Stdout, "PHASE %d (%s - %d/%d)\n", pg.Phase, label, done, total)
+		fmt.Fprintln(os.Stdout, output.RenderPhaseHeader(pg.Phase, string(status), done, total))
 		for _, proj := range pg.Projects {
-			if len(phases) > 0 && hasMultipleProjects(phases, unphased) {
+			if hasMultipleProjects(phases, unphased) {
 				fmt.Fprintf(os.Stdout, "  %s\n", proj.Name)
 			}
 			for _, item := range proj.Items {
-				statusLabel := item.Status
-				if item.Blocked != nil {
-					statusLabel = "blocked"
-				}
 				indent := "  "
 				if hasMultipleProjects(phases, unphased) {
 					indent = "    "
 				}
-				fmt.Fprintf(os.Stdout, "%s[%-8s] %-10s %s\n", indent, statusLabel, item.ID, item.Title)
+				fmt.Fprintf(os.Stdout, "%s%s  %-10s  %s\n",
+					indent,
+					output.RenderStatus(item.Status, item.Blocked != nil),
+					item.ID,
+					item.Title,
+				)
 			}
 		}
 		fmt.Fprintln(os.Stdout)
 	}
 
-	// Unphased items
 	if len(unphased) > 0 {
 		totalUnphased := 0
 		for _, proj := range unphased {
 			totalUnphased += len(proj.Items)
 		}
-		fmt.Fprintf(os.Stdout, "UNPHASED (%d)\n", totalUnphased)
+		fmt.Fprintf(os.Stdout, "%s\n", output.RenderPhaseHeader(0, "unphased", 0, totalUnphased))
 		for _, proj := range unphased {
 			if hasMultipleProjects(phases, unphased) {
 				fmt.Fprintf(os.Stdout, "  %s\n", proj.Name)
 			}
 			for _, item := range proj.Items {
-				statusLabel := item.Status
-				if item.Blocked != nil {
-					statusLabel = "blocked"
-				}
 				indent := "  "
 				if hasMultipleProjects(phases, unphased) {
 					indent = "    "
 				}
-				fmt.Fprintf(os.Stdout, "%s[%-8s] %-10s %s\n", indent, statusLabel, item.ID, item.Title)
+				fmt.Fprintf(os.Stdout, "%s%s  %-10s  %s\n",
+					indent,
+					output.RenderStatus(item.Status, item.Blocked != nil),
+					item.ID,
+					item.Title,
+				)
 			}
 		}
 		fmt.Fprintln(os.Stdout)
@@ -407,15 +396,17 @@ func renderPhaseDetail(phases []phaseGroup, phaseNum int) error {
 	}
 
 	// Table output
-	fmt.Fprintf(os.Stdout, "PHASE %d (%s - %d/%d)\n\n", phaseNum, status, done, total)
+	fmt.Fprintln(os.Stdout, output.RenderPhaseHeader(phaseNum, string(status), done, total))
+	fmt.Fprintln(os.Stdout)
 	for _, proj := range target.Projects {
 		fmt.Fprintf(os.Stdout, "  %s\n", proj.Name)
 		for _, item := range proj.Items {
-			statusLabel := item.Status
-			if item.Blocked != nil {
-				statusLabel = "blocked"
-			}
-			fmt.Fprintf(os.Stdout, "    [%-8s] %-10s [%s] %s\n", statusLabel, item.ID, item.Priority, item.Title)
+			fmt.Fprintf(os.Stdout, "    %s  %-10s  %s  %s\n",
+				output.RenderStatus(item.Status, item.Blocked != nil),
+				item.ID,
+				output.RenderPriority(item.Priority),
+				item.Title,
+			)
 		}
 		fmt.Fprintln(os.Stdout)
 	}
