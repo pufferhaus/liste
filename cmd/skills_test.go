@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"os"
+	"path"
 	"path/filepath"
 	"testing"
 
@@ -16,7 +17,7 @@ func TestSkillsEmbed(t *testing.T) {
 		"append", "set", "status", "next", "progress", "diff", "batch",
 	}
 	for _, name := range expected {
-		path := filepath.Join(name, "SKILL.md")
+		path := path.Join(name, "SKILL.md")
 		data, err := listeskills.Files.ReadFile(path)
 		if err != nil {
 			t.Errorf("skill %q not found in embed: %v", name, err)
