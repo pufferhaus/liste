@@ -2,6 +2,7 @@ package output_test
 
 import (
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/pblca/liste/internal/output"
@@ -67,5 +68,21 @@ func TestRenderPriority(t *testing.T) {
 		if got != tt.want {
 			t.Errorf("RenderPriority(%q) = %q, want %q", tt.priority, got, tt.want)
 		}
+	}
+}
+
+func TestRenderPhaseHeader(t *testing.T) {
+	got := stripANSI(output.RenderPhaseHeader(1, "active", 2, 5))
+	if !strings.Contains(got, "PHASE 1") {
+		t.Errorf("RenderPhaseHeader missing phase number, got: %q", got)
+	}
+	if !strings.Contains(got, "active") {
+		t.Errorf("RenderPhaseHeader missing status, got: %q", got)
+	}
+	if !strings.Contains(got, "2/5") {
+		t.Errorf("RenderPhaseHeader missing progress, got: %q", got)
+	}
+	if !strings.Contains(got, "─") {
+		t.Errorf("RenderPhaseHeader missing divider, got: %q", got)
 	}
 }
