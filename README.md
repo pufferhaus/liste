@@ -1,10 +1,18 @@
 # liste
 
+```
+  ██╗     ██╗███████╗████████╗███████╗
+  ██║     ██║██╔════╝╚══██╔══╝██╔════╝
+  ██║     ██║███████╗   ██║   █████╗  
+  ██║     ██║╚════██║   ██║   ██╔══╝  
+  ███████╗██║███████║   ██║   ███████╗
+  ╚══════╝╚═╝╚══════╝   ╚═╝   ╚══════╝
+  portable cli roadmap tracker · for humans and AI agents
+```
+
 A portable CLI tool for managing project roadmaps as structured markdown files. Designed for both humans and AI agents.
 
 Items are stored as individual markdown files with YAML frontmatter in a `.liste/` directory. No database, no server, no lock-in — just files in your repo.
-
-![liste demo](demo/liste-demo.gif)
 
 ## Install
 
@@ -70,6 +78,42 @@ liste ready
 # AI agent context (compact summary for LLM consumption)
 liste context
 ```
+
+![liste demo](demo/liste-demo.gif)
+
+## Interactive TUI
+
+Launch a full-screen interactive TUI with `liste -i`:
+
+```bash
+liste -i
+```
+
+![liste TUI demo](demo/liste-tui-demo.gif)
+
+### Views
+
+| View | Description |
+|------|-------------|
+| **list** | All items, scrollable, colour-coded by type and status |
+| **roadmap** | Items grouped by phase |
+| **blocked** | Items with an active blocker reason |
+| **next** | Priority-sorted queue of ready items |
+| **search** | Real-time full-text filter |
+
+### Keybindings
+
+| Key | Action |
+|-----|--------|
+| `Tab` / `Shift+Tab` | Switch views |
+| `↑` / `↓` or `k` / `j` | Navigate list |
+| `Enter` | Open item detail overlay |
+| `q` / `Escape` | Close detail overlay / quit |
+| `d` | Mark selected item done |
+| `b` | Block selected item (prompts for reason) |
+| `Ctrl+C` | Quit |
+
+The TUI requires a real TTY — `--json` and `--quiet` flags are incompatible with `-i`.
 
 ## Concepts
 
