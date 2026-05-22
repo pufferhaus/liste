@@ -1,5 +1,3 @@
-# liste
-
 ```
   ██╗     ██╗███████╗████████╗███████╗
   ██║     ██║██╔════╝╚══██╔══╝██╔════╝
@@ -345,6 +343,18 @@ At the start of every session, invoke the liste:session-start skill.
 ```
 
 Available skills: `/liste-add-feature`, `/liste-add-bug`, `/liste-add-task`, `/liste-add-idea`, `/liste-add-epic`, `/liste-start`, `/liste-done`, `/liste-block`, `/liste-promote`, `/liste-link`, `/liste-find`, `/liste-append`, `/liste-set`, `/liste-status`, `/liste-next`, `/liste-progress`, `/liste-diff`, `/liste-batch`, `/liste-session-start`
+
+## Credits
+
+Built with the [Charm](https://charm.sh) toolchain:
+
+| Package | Use |
+|---------|-----|
+| [bubbletea](https://github.com/charmbracelet/bubbletea) | TUI framework |
+| [bubbles](https://github.com/charmbracelet/bubbles) | TUI components (list, viewport, textinput) |
+| [lipgloss](https://github.com/charmbracelet/lipgloss) | Terminal styling |
+| [glamour](https://github.com/charmbracelet/glamour) | Markdown rendering |
+| [huh](https://github.com/charmbracelet/huh) | Interactive forms |
 
 ## License
 
