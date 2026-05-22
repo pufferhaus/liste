@@ -2,6 +2,7 @@
 liste
 liste.exe
 liste-*
+!demo/liste-demo.gif
 dist/
 
 # IDE
