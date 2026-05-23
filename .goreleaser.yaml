@@ -12,9 +12,9 @@ builds:
       - CGO_ENABLED=0
     ldflags:
       - -s -w
-      - -X github.com/pufferhaus/liste/cmd.buildVersion={{.Version}}
-      - -X github.com/pufferhaus/liste/cmd.buildCommit={{.ShortCommit}}
-      - -X github.com/pufferhaus/liste/cmd.buildDate={{.Date}}
+      - -X main.version={{.Version}}
+      - -X main.commit={{.ShortCommit}}
+      - -X main.date={{.Date}}
     goos:
       - linux
       - darwin

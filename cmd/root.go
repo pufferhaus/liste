@@ -33,6 +33,10 @@ var rootCmd = &cobra.Command{
 }
 
 func init() {
+	rootCmd.Version = buildVersion
+	rootCmd.SetVersionTemplate("{{.Version}}\n")
+	rootCmd.Flags().BoolP("version", "v", false, "Print version and exit")
+
 	rootCmd.PersistentFlags().BoolVar(&flagJSON, "json", false, "Output in JSON format")
 	rootCmd.PersistentFlags().BoolVar(&flagQuiet, "quiet", false, "Minimal output (IDs only)")
 	rootCmd.PersistentFlags().StringVarP(&flagProject, "project", "p", "", "Target a specific sub-project")
