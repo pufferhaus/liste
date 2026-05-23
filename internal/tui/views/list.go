@@ -19,6 +19,9 @@ type ItemBlockMsg struct{ ID string }
 // ItemEditMsg is sent when the user presses 'e' on an item.
 type ItemEditMsg struct{ Item *model.Item }
 
+// ItemDeleteMsg is sent when the user requests deleting an item.
+type ItemDeleteMsg struct{ ID string }
+
 // listItemHeight is the visual height of each list item (default delegate height=2 + spacing=1).
 const listItemHeight = 3
 

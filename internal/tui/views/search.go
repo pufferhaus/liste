@@ -75,6 +75,43 @@ func (m SearchView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case tea.MouseButtonWheelDown:
 			m.list.CursorDown()
 			return m, nil
+		case tea.MouseButtonLeft:
+			if msg.Action != tea.MouseActionRelease {
+				return m, nil
+			}
+			// Layout (terminal Y, after 3-row tab bar):
+			//   Y=3: search box border top
+			//   Y=4: search input content
+			//   Y=5: search box border bottom
+			//   Y=6: blank ("\n" separator)
+			//   Y=7,8: list header (filter bar + status bar)
+			//   Y=9+: list items (listItemHeight=3 each)
+			const (
+				searchInputY    = 4
+				searchListStart = 9
+			)
+			switch {
+			case msg.Y == searchInputY:
+				m.input.Focus()
+				// border(1)+padding(1)=2 chars before input content
+				col := msg.X - 2
+				if col < 0 {
+					col = 0
+				}
+				m.input.SetCursor(col)
+				return m, textinput.Blink
+			case msg.Y >= searchListStart:
+				itemOnPage := (msg.Y - searchListStart) / listItemHeight
+				absIdx := m.list.Paginator.Page*m.list.Paginator.PerPage + itemOnPage
+				items := m.list.Items()
+				if absIdx >= 0 && absIdx < len(items) {
+					m.list.Select(absIdx)
+					if li, ok := m.list.SelectedItem().(ListItem); ok {
+						return m, func() tea.Msg { return ItemSelectedMsg(li) }
+					}
+				}
+			}
+			return m, nil
 		}
 	case tea.WindowSizeMsg:
 		m.width = msg.Width

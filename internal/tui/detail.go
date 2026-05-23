@@ -95,6 +95,11 @@ type CloseDetailMsg struct{}
 
 func (m DetailModel) Init() tea.Cmd { return nil }
 
+// detailActionBarY returns the terminal row of the action bar inside the overlay.
+// The viewport fills height-4 rows; the action bar uses the first of the two
+// padding rows that the lipgloss Height(h-2) style otherwise leaves blank.
+func (m DetailModel) detailActionBarY() int { return m.height - 3 }
+
 func (m DetailModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -104,6 +109,30 @@ func (m DetailModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "e":
 			item := m.item
 			return m, func() tea.Msg { return views.ItemEditMsg{Item: item} }
+		case "d":
+			item := m.item
+			return m, func() tea.Msg { return views.ItemDoneMsg{ID: item.ID} }
+		case "b":
+			item := m.item
+			return m, func() tea.Msg { return views.ItemBlockMsg{ID: item.ID} }
+		case "x":
+			item := m.item
+			return m, func() tea.Msg { return views.ItemDeleteMsg{ID: item.ID} }
+		}
+	case tea.MouseMsg:
+		if msg.Button == tea.MouseButtonLeft && msg.Action == tea.MouseActionRelease &&
+			msg.Y == m.detailActionBarY() {
+			item := m.item
+			switch {
+			case msg.X >= 2 && msg.X <= 9: // [e] Edit
+				return m, func() tea.Msg { return views.ItemEditMsg{Item: item} }
+			case msg.X >= 12 && msg.X <= 19: // [d] Done
+				return m, func() tea.Msg { return views.ItemDoneMsg{ID: item.ID} }
+			case msg.X >= 22 && msg.X <= 30: // [b] Block
+				return m, func() tea.Msg { return views.ItemBlockMsg{ID: item.ID} }
+			case msg.X >= 33 && msg.X <= 42: // [x] Delete
+				return m, func() tea.Msg { return views.ItemDeleteMsg{ID: item.ID} }
+			}
 		}
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
@@ -126,8 +155,12 @@ func (m DetailModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m DetailModel) View() string {
+	// Button layout (terminal X relative to screen, accounting for border+padding=2):
+	// [e] Edit  (X=2..9)  [d] Done  (X=12..19)  [b] Block  (X=22..30)  [x] Delete  (X=33..42)
+	actionBar := detailFaintStyle.Render("[e] Edit  [d] Done  [b] Block  [x] Delete  esc: close")
+	content := m.viewport.View() + "\n" + actionBar
 	return detailBorderStyle.
 		Width(m.width - 2).
 		Height(m.height - 2).
-		Render(m.viewport.View())
+		Render(content)
 }

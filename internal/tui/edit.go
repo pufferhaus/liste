@@ -48,6 +48,10 @@ var editFieldLabels = [5]string{"Title:", "Status:", "Priority:", "Phase:", "Tag
 // ItemSavedMsg signals that the edit form saved an item.
 type ItemSavedMsg struct{ Item *model.Item }
 
+// EditCancelRequestMsg signals the user wants to leave the edit form (esc key).
+// App handles it by showing a discard-confirmation modal.
+type EditCancelRequestMsg struct{}
+
 // EditModel renders in the content area (view space) for editing an item's fields.
 type EditModel struct {
 	item    *model.Item
@@ -156,7 +160,7 @@ func (m EditModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "esc":
-			return m, func() tea.Msg { return CloseDetailMsg{} }
+			return m, func() tea.Msg { return EditCancelRequestMsg{} }
 		case "ctrl+s":
 			return m.save()
 		case "tab":
@@ -171,13 +175,32 @@ func (m EditModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.Button == tea.MouseButtonLeft && msg.Action == tea.MouseActionRelease {
 			if field := fieldAtY(msg.Y); field >= 0 {
 				m.focusField(field)
-				// For textinput fields, position cursor at click X.
 				if field < efBody {
 					clickPos := msg.X - editFieldStartX
 					if clickPos < 0 {
 						clickPos = 0
 					}
 					m.inputs[field].SetCursor(clickPos)
+				} else {
+					// Navigate textarea to clicked row then column.
+					// textarea prompt = "┃ " = 2 chars wide; content starts at X=2.
+					const promptW = 2
+					targetRow := msg.Y - editBodyStartY
+					if targetRow < 0 {
+						targetRow = 0
+					}
+					delta := targetRow - m.body.Line()
+					for i := 0; i < delta; i++ {
+						m.body.CursorDown()
+					}
+					for i := 0; i > delta; i-- {
+						m.body.CursorUp()
+					}
+					col := msg.X - promptW
+					if col < 0 {
+						col = 0
+					}
+					m.body.SetCursor(col)
 				}
 				return m, textinput.Blink
 			}

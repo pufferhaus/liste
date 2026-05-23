@@ -35,6 +35,18 @@ var (
 				Padding(0, 1)
 
 	statusBarStyle = lipgloss.NewStyle().Faint(true).Padding(0, 1)
+
+	deleteModalStyle = lipgloss.NewStyle().
+				Border(lipgloss.RoundedBorder()).
+				BorderForeground(lipgloss.Color("#f38ba8")).
+				Padding(1, 2)
+
+	deleteConfirmBtnStyle = lipgloss.NewStyle().
+				Background(lipgloss.Color("#f38ba8")).
+				Foreground(lipgloss.Color("#1e1e2e")).
+				Padding(0, 1)
+
+	deleteCancelBtnStyle = lipgloss.NewStyle().Faint(true)
 )
 
 func tabBorderWithBottom(left, middle, right string) lipgloss.Border {
@@ -48,18 +60,20 @@ func tabBorderWithBottom(left, middle, right string) lipgloss.Border {
 // AppModel is the root bubbletea model for liste -i.
 // Exported so tests can inspect it.
 type AppModel struct {
-	tabs        []string
-	activeTab   int
-	viewMap     map[string]tea.Model
-	overlay     *DetailModel
-	editOverlay *EditModel
-	blockInput  *blockInputModel
-	store       *store.Store
-	config      *model.Config
-	tuiCfg      model.TUIConfig
-	width       int
-	height      int
-	statusMsg   string
+	tabs          []string
+	activeTab     int
+	viewMap       map[string]tea.Model
+	overlay       *DetailModel
+	editOverlay   *EditModel
+	blockInput    *blockInputModel
+	confirmDelete  *confirmDeleteModel
+	confirmDiscard *confirmDiscardModel
+	store          *store.Store
+	config        *model.Config
+	tuiCfg        model.TUIConfig
+	width         int
+	height        int
+	statusMsg     string
 }
 
 // blockInputModel handles the 'b' key — prompts for block reason inline.
@@ -67,6 +81,14 @@ type blockInputModel struct {
 	input  textinput.Model
 	itemID string
 }
+
+// confirmDeleteModel holds state for the delete confirmation modal.
+type confirmDeleteModel struct {
+	itemID string
+}
+
+// confirmDiscardModel is the discard-changes confirmation modal for the edit form.
+type confirmDiscardModel struct{}
 
 // viewLoadedMsg carries a lazily-initialized view back into the Update loop.
 type viewLoadedMsg struct {
@@ -164,9 +186,17 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.updateBlockInput(msg)
 	}
 
-	// CloseDetailMsg and ItemEditMsg must be intercepted before the overlay
-	// routing — the overlay swallows all messages when open, so these would
-	// never reach the switch below without early checks.
+	if m.confirmDelete != nil {
+		return m.updateConfirmDelete(msg)
+	}
+
+	if m.confirmDiscard != nil {
+		return m.updateConfirmDiscard(msg)
+	}
+
+	// Messages from overlays must be intercepted before the overlay routing —
+	// the overlay swallows all messages when open, so these would never reach
+	// the switch below without early checks.
 	if _, ok := msg.(CloseDetailMsg); ok {
 		m.overlay = nil
 		m.editOverlay = nil
@@ -174,12 +204,43 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	if editMsg, ok := msg.(views.ItemEditMsg); ok {
-		m.overlay = nil
+		// Keep m.overlay open so cancelling returns to the detail view.
 		if m.config != nil {
 			edit := NewEditModel(editMsg.Item, m.config, m.width, m.height)
 			m.editOverlay = &edit
 			return m, edit.Init()
 		}
+		return m, nil
+	}
+
+	if _, ok := msg.(EditCancelRequestMsg); ok && m.editOverlay != nil {
+		m.confirmDiscard = &confirmDiscardModel{}
+		return m, nil
+	}
+
+	if doneMsg, ok := msg.(views.ItemDoneMsg); ok {
+		m.overlay = nil
+		if err := m.markDone(doneMsg.ID); err != nil {
+			m.statusMsg = "Error: " + err.Error()
+		} else {
+			m.statusMsg = doneMsg.ID + " marked done"
+			m.reloadCurrentView()
+		}
+		return m, nil
+	}
+
+	if blockMsg, ok := msg.(views.ItemBlockMsg); ok {
+		m.overlay = nil
+		ti := textinput.New()
+		ti.Placeholder = "Block reason (optional, press enter to confirm)"
+		ti.Focus()
+		m.blockInput = &blockInputModel{input: ti, itemID: blockMsg.ID}
+		return m, textinput.Blink
+	}
+
+	if deleteMsg, ok := msg.(views.ItemDeleteMsg); ok {
+		// Keep m.overlay open so cancel returns to the detail view.
+		m.confirmDelete = &confirmDeleteModel{itemID: deleteMsg.ID}
 		return m, nil
 	}
 
@@ -196,6 +257,7 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					if i != m.activeTab {
 						m.activeTab = i
 						m.editOverlay = nil // discard unsaved edit on tab switch
+						m.overlay = nil    // close detail view too
 						return m, m.ensureViewLoaded()
 					}
 					return m, nil
@@ -254,24 +316,13 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.statusMsg = msg.Item.ID + " saved"
 			m.editOverlay = nil
 			m.reloadCurrentView()
+			// Refresh detail overlay so it shows the saved data, not the pre-edit copy.
+			if m.overlay != nil {
+				overlay := NewDetailModel(msg.Item, m.width, m.height)
+				m.overlay = &overlay
+			}
 		}
 		return m, nil
-
-	case views.ItemDoneMsg:
-		if err := m.markDone(msg.ID); err != nil {
-			m.statusMsg = "Error: " + err.Error()
-		} else {
-			m.statusMsg = msg.ID + " marked done"
-			m.reloadCurrentView()
-		}
-		return m, nil
-
-	case views.ItemBlockMsg:
-		ti := textinput.New()
-		ti.Placeholder = "Block reason (optional, press enter to confirm)"
-		ti.Focus()
-		m.blockInput = &blockInputModel{input: ti, itemID: msg.ID}
-		return m, textinput.Blink
 	}
 
 	return m.updateCurrentView(msg)
@@ -316,6 +367,150 @@ func (m AppModel) updateBlockInput(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	m.blockInput.input, cmd = m.blockInput.input.Update(msg)
 	return m, cmd
+}
+
+// confirmModalHeight is the fixed line count of a confirm modal.
+// Layout: border(1) + padding(1) + msg(1) + blank(1) + buttons(1) + padding(1) + border(1) = 7.
+const confirmModalHeight = 7
+
+// confirmButtonRowOffset is the row within the modal where buttons appear.
+const confirmButtonRowOffset = 4 // border + top-pad + msg + blank
+
+// confirmModalLayout describes the screen-absolute position of the modal and its buttons.
+type confirmModalLayout struct {
+	startX, startY             int
+	confirmXStart, confirmXEnd int
+	cancelXStart, cancelXEnd   int
+	buttonY                    int
+}
+
+// renderConfirmModal renders a confirmation modal with title and a styled confirm button.
+// The cancel button is always "[ Cancel ]".
+func (m AppModel) renderConfirmModal(title, confirmLabel string) (string, confirmModalLayout) {
+	confirmBtn := deleteConfirmBtnStyle.Render(confirmLabel)
+	cancelBtn := deleteCancelBtnStyle.Render("[ Cancel ]")
+	confirmW := lipgloss.Width(confirmBtn)
+	cancelW := lipgloss.Width(cancelBtn)
+	const gap = 2
+	buttons := confirmBtn + "  " + cancelBtn
+
+	innerW := confirmW + gap + cancelW
+	if mw := lipgloss.Width(title); mw > innerW {
+		innerW = mw
+	}
+	content := lipgloss.NewStyle().Width(innerW).Render(title) +
+		"\n\n" +
+		lipgloss.NewStyle().Width(innerW).Render(buttons)
+	modal := deleteModalStyle.Render(content)
+
+	modalW := lipgloss.Width(modal)
+	startX := (m.width - modalW) / 2
+	startY := (m.height - confirmModalHeight) / 2
+	const contentOffX = 3 // border(1) + padding(2)
+	layout := confirmModalLayout{
+		startX:        startX,
+		startY:        startY,
+		confirmXStart: startX + contentOffX,
+		confirmXEnd:   startX + contentOffX + confirmW,
+		cancelXStart:  startX + contentOffX + confirmW + gap,
+		cancelXEnd:    startX + contentOffX + confirmW + gap + cancelW,
+		buttonY:       startY + confirmButtonRowOffset,
+	}
+	return modal, layout
+}
+
+func (m AppModel) renderDeleteModal() (string, confirmModalLayout) {
+	return m.renderConfirmModal("Delete "+m.confirmDelete.itemID+"?", "Confirm Delete")
+}
+
+func (m AppModel) renderDiscardModal() (string, confirmModalLayout) {
+	return m.renderConfirmModal("Discard changes?", "Discard")
+}
+
+func (m AppModel) doDelete() (tea.Model, tea.Cmd) {
+	id := m.confirmDelete.itemID
+	m.confirmDelete = nil
+	m.overlay = nil // dismiss detail view after confirmed delete
+	if err := m.store.DeleteItem(id); err != nil {
+		m.statusMsg = "Error: " + err.Error()
+	} else {
+		m.statusMsg = id + " deleted"
+		m.reloadCurrentView()
+	}
+	return m, nil
+}
+
+func (m AppModel) updateConfirmDelete(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "y", "Y":
+			return m.doDelete()
+		case "n", "esc", "q":
+			m.confirmDelete = nil
+		}
+	case tea.MouseMsg:
+		if msg.Button == tea.MouseButtonLeft && msg.Action == tea.MouseActionRelease {
+			_, layout := m.renderDeleteModal()
+			if msg.Y == layout.buttonY {
+				switch {
+				case msg.X >= layout.confirmXStart && msg.X < layout.confirmXEnd:
+					return m.doDelete()
+				case msg.X >= layout.cancelXStart && msg.X < layout.cancelXEnd:
+					m.confirmDelete = nil
+				}
+			}
+		}
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
+		m.height = msg.Height
+		for name, v := range m.viewMap {
+			updated, _ := v.Update(msg)
+			m.viewMap[name] = updated
+		}
+	}
+	return m, nil
+}
+
+func (m AppModel) updateConfirmDiscard(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "y", "Y", "enter":
+			// Discard confirmed: close edit. If the edit was opened from the
+			// detail view, m.overlay is still set so detail reappears.
+			m.confirmDiscard = nil
+			m.editOverlay = nil
+			return m, nil
+		case "n", "esc":
+			// Stay in edit mode.
+			m.confirmDiscard = nil
+			return m, textinput.Blink
+		}
+	case tea.MouseMsg:
+		if msg.Button == tea.MouseButtonLeft && msg.Action == tea.MouseActionRelease {
+			_, layout := m.renderDiscardModal()
+			if msg.Y == layout.buttonY {
+				switch {
+				case msg.X >= layout.confirmXStart && msg.X < layout.confirmXEnd:
+					m.confirmDiscard = nil
+					m.editOverlay = nil
+					return m, nil
+				case msg.X >= layout.cancelXStart && msg.X < layout.cancelXEnd:
+					m.confirmDiscard = nil
+					return m, textinput.Blink
+				}
+			}
+		}
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
+		m.height = msg.Height
+		for name, v := range m.viewMap {
+			updated, _ := v.Update(msg)
+			m.viewMap[name] = updated
+		}
+	}
+	return m, nil
 }
 
 func (m AppModel) updateCurrentView(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -430,28 +625,39 @@ func (m AppModel) View() string {
 		return "Loading..."
 	}
 
-	if m.overlay != nil {
-		return m.overlay.View()
+	// renderBaseView returns the screen contents WITHOUT any confirm modals.
+	// Priority: editOverlay (in view space, possibly with detail "behind") > overlay > blockInput > normal view.
+	renderBaseView := func() string {
+		if m.editOverlay != nil {
+			tabBar := m.renderTabBar()
+			statusBar := statusBarStyle.Render(m.statusMsg + "  tab: next field  ctrl+s: save  esc: cancel")
+			return tabBar + "\n" + m.editOverlay.View() + "\n" + statusBar
+		}
+		if m.overlay != nil {
+			return m.overlay.View()
+		}
+		if m.blockInput != nil {
+			return m.blockInput.input.View()
+		}
+		tabBar := m.renderTabBar()
+		viewStr := ""
+		if v, ok := m.viewMap[m.currentViewName()]; ok {
+			viewStr = v.View()
+		}
+		hint := "  tab/shift+tab: switch  d: done  b: block  e: edit  enter: detail  q: quit"
+		statusBar := statusBarStyle.Render(m.statusMsg + hint)
+		return tabBar + "\n" + viewStr + "\n" + statusBar
 	}
 
-	if m.blockInput != nil {
-		return m.blockInput.input.View()
+	if m.confirmDiscard != nil {
+		modal, _ := m.renderDiscardModal()
+		return overlayCenter(renderBaseView(), modal, m.width, m.height)
 	}
 
-	tabBar := m.renderTabBar()
-
-	if m.editOverlay != nil {
-		statusBar := statusBarStyle.Render(m.statusMsg + "  tab: next field  ctrl+s: save  esc: cancel")
-		return tabBar + "\n" + m.editOverlay.View() + "\n" + statusBar
+	if m.confirmDelete != nil {
+		modal, _ := m.renderDeleteModal()
+		return overlayCenter(renderBaseView(), modal, m.width, m.height)
 	}
 
-	viewStr := ""
-	if v, ok := m.viewMap[m.currentViewName()]; ok {
-		viewStr = v.View()
-	}
-
-	hint := "  tab/shift+tab: switch  d: done  b: block  e: edit  enter: detail  q: quit"
-	statusBar := statusBarStyle.Render(m.statusMsg + hint)
-
-	return tabBar + "\n" + viewStr + "\n" + statusBar
+	return renderBaseView()
 }
