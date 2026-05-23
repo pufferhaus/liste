@@ -1,7 +1,7 @@
 {
   "name": "liste",
   "description": "Claude Code skills for the liste CLI roadmap tracker. 19 skills covering the full liste interface for managing project roadmaps as markdown files.",
-  "version": "1.0.0",
+  "version": "1.1.2",
   "author": {
     "name": "pufferhaus",
     "url": "https://github.com/pufferhaus"
