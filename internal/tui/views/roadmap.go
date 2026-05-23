@@ -135,7 +135,7 @@ func (m RoadmapView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.width = msg.Width
 		m.height = msg.Height
 		m.viewport.Width = msg.Width
-		m.viewport.Height = msg.Height - 3
+		m.viewport.Height = msg.Height - 4
 		if content, err := buildRoadmapContent(m.store, msg.Width); err == nil {
 			m.viewport.SetContent(content)
 		}

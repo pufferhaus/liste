@@ -49,13 +49,13 @@ func (m BlockedView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 	case tea.MouseMsg:
-		updated, cmd, handled := handleListMouse(m.list, msg, 0)
+		updated, cmd, handled := handleListMouse(m.list, msg, 3)
 		m.list = updated
 		if handled {
 			return m, cmd
 		}
 	case tea.WindowSizeMsg:
-		m.list.SetSize(msg.Width, msg.Height-3)
+		m.list.SetSize(msg.Width, msg.Height-4)
 	}
 	var cmd tea.Cmd
 	m.list, cmd = m.list.Update(msg)

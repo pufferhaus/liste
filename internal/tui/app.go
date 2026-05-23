@@ -14,12 +14,36 @@ import (
 	"github.com/pufferhaus/liste/internal/tui/views"
 )
 
+// tabBarHeight is the number of terminal rows the tab bar occupies.
+const tabBarHeight = 3
+
 var (
-	tabBarStyle      = lipgloss.NewStyle().Padding(0, 1)
-	tabActiveStyle   = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#cdd6f4")).Underline(true)
-	tabInactiveStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#6c7a89"))
-	statusBarStyle   = lipgloss.NewStyle().Faint(true).Padding(0, 1)
+	tabHighlightColor = lipgloss.Color("#74b9ff")
+	tabInactiveColor  = lipgloss.Color("#6c7a89")
+
+	activeTabStyle = lipgloss.NewStyle().
+			Border(tabBorderWithBottom("┘", " ", "└"), true).
+			BorderForeground(tabHighlightColor).
+			Foreground(lipgloss.Color("#cdd6f4")).
+			Bold(true).
+			Padding(0, 1)
+
+	inactiveTabStyle = lipgloss.NewStyle().
+				Border(tabBorderWithBottom("┴", "─", "┴"), true).
+				BorderForeground(tabInactiveColor).
+				Foreground(tabInactiveColor).
+				Padding(0, 1)
+
+	statusBarStyle = lipgloss.NewStyle().Faint(true).Padding(0, 1)
 )
+
+func tabBorderWithBottom(left, middle, right string) lipgloss.Border {
+	b := lipgloss.RoundedBorder()
+	b.BottomLeft = left
+	b.Bottom = middle
+	b.BottomRight = right
+	return b
+}
 
 // AppModel is the root bubbletea model for liste -i.
 // Exported so tests can inspect it.
@@ -88,7 +112,7 @@ func newApp(result *discovery.Result, rootCfg *model.Config) (AppModel, error) {
 
 // initView creates a view model for the given view name.
 func (m AppModel) initView(name string, width, height int) (tea.Model, error) {
-	contentH := height - 3
+	contentH := height - tabBarHeight - 1 // tabs + status bar
 	if contentH < 1 {
 		contentH = 1
 	}
@@ -147,12 +171,34 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
-	if m.editOverlay != nil {
-		return m.updateEditOverlay(msg)
+	// Mouse: tab bar clicks always take priority, even during editing.
+	if mouse, ok := msg.(tea.MouseMsg); ok {
+		if mouse.Button == tea.MouseButtonLeft &&
+			mouse.Action == tea.MouseActionRelease &&
+			mouse.Y < tabBarHeight {
+			x := 0
+			for i := range m.tabs {
+				rendered := m.renderTab(i)
+				w := lipgloss.Width(rendered)
+				if mouse.X >= x && mouse.X < x+w {
+					if i != m.activeTab {
+						m.activeTab = i
+						m.editOverlay = nil // discard unsaved edit on tab switch
+						return m, m.ensureViewLoaded()
+					}
+					return m, nil
+				}
+				x += w
+			}
+		}
 	}
 
 	if m.overlay != nil {
 		return m.updateOverlay(msg)
+	}
+
+	if m.editOverlay != nil {
+		return m.updateEditOverlay(msg)
 	}
 
 	switch msg := msg.(type) {
@@ -166,27 +212,6 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case tea.MouseMsg:
-		// Handle tab bar clicks (Y=0 is the tab bar row).
-		if msg.Button == tea.MouseButtonLeft && msg.Action == tea.MouseActionRelease && msg.Y == 0 {
-			x := 1 // tabBarStyle has Padding(0,1) — 1 char left pad
-			for i, name := range m.tabs {
-				var tabStr string
-				if i == m.activeTab {
-					tabStr = tabActiveStyle.Render(strings.ToUpper(name))
-				} else {
-					tabStr = tabInactiveStyle.Render(name)
-				}
-				w := lipgloss.Width(tabStr)
-				if msg.X >= x && msg.X < x+w {
-					if i != m.activeTab {
-						m.activeTab = i
-						return m, m.ensureViewLoaded()
-					}
-					return m, nil
-				}
-				x += w + 2 // "  " separator between tabs
-			}
-		}
 		return m.updateCurrentView(msg)
 
 	case tea.KeyMsg:
@@ -211,7 +236,7 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case views.ItemEditMsg:
-		m.overlay = nil // close detail if open
+		m.overlay = nil
 		if m.config != nil {
 			edit := NewEditModel(msg.Item, m.config, m.width, m.height)
 			m.editOverlay = &edit
@@ -307,7 +332,7 @@ func (m AppModel) ensureViewLoaded() tea.Cmd {
 		return nil
 	}
 	width, height := m.width, m.height
-	appCopy := m // m has the store pointer; initView uses m.store
+	appCopy := m
 	return func() tea.Msg {
 		view, err := appCopy.initView(name, width, height)
 		if err != nil {
@@ -349,13 +374,57 @@ func (m AppModel) markBlocked(id, reason string) error {
 	return m.store.WriteItem(item)
 }
 
+// renderTab returns the styled string for tab at index idx.
+func (m AppModel) renderTab(idx int) string {
+	isActive := idx == m.activeTab
+	isFirst := idx == 0
+	isLast := idx == len(m.tabs)-1
+	name := strings.ToUpper(m.tabs[idx])
+
+	var border lipgloss.Border
+	if isActive {
+		border = tabBorderWithBottom("┘", " ", "└")
+	} else {
+		border = tabBorderWithBottom("┴", "─", "┴")
+	}
+	if isFirst {
+		if isActive {
+			border.BottomLeft = "│"
+		} else {
+			border.BottomLeft = "├"
+		}
+	}
+	if isLast {
+		if isActive {
+			border.BottomRight = "│"
+		} else {
+			border.BottomRight = "┤"
+		}
+	}
+
+	if isActive {
+		return activeTabStyle.Border(border).Render(name)
+	}
+	return inactiveTabStyle.Border(border).Render(name)
+}
+
+func (m AppModel) renderTabBar() string {
+	var parts []string
+	for i := range m.tabs {
+		parts = append(parts, m.renderTab(i))
+	}
+	row := lipgloss.JoinHorizontal(lipgloss.Top, parts...)
+	gapWidth := m.width - lipgloss.Width(row)
+	if gapWidth < 0 {
+		gapWidth = 0
+	}
+	gap := lipgloss.NewStyle().Foreground(tabInactiveColor).Render(strings.Repeat("─", gapWidth))
+	return lipgloss.JoinHorizontal(lipgloss.Bottom, row, gap)
+}
+
 func (m AppModel) View() string {
 	if m.width == 0 {
 		return "Loading..."
-	}
-
-	if m.editOverlay != nil {
-		return m.editOverlay.View()
 	}
 
 	if m.overlay != nil {
@@ -366,15 +435,12 @@ func (m AppModel) View() string {
 		return m.blockInput.input.View()
 	}
 
-	var tabParts []string
-	for i, name := range m.tabs {
-		if i == m.activeTab {
-			tabParts = append(tabParts, tabActiveStyle.Render(strings.ToUpper(name)))
-		} else {
-			tabParts = append(tabParts, tabInactiveStyle.Render(name))
-		}
+	tabBar := m.renderTabBar()
+
+	if m.editOverlay != nil {
+		statusBar := statusBarStyle.Render(m.statusMsg + "  tab: next field  ctrl+s: save  esc: cancel")
+		return tabBar + "\n" + m.editOverlay.View() + "\n" + statusBar
 	}
-	tabBar := tabBarStyle.Render(strings.Join(tabParts, "  "))
 
 	viewStr := ""
 	if v, ok := m.viewMap[m.currentViewName()]; ok {

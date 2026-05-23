@@ -26,9 +26,9 @@ const listItemHeight = 3
 const listHeaderLines = 2
 
 // handleListMouse processes mouse events for a list view backed by a list.Model.
-// tabBarY is the terminal Y of the tab bar (0 for the top of the screen).
+// tabBarHeight is the number of terminal rows the tab bar occupies.
 // Returns the updated list, an optional cmd, and whether the event was consumed.
-func handleListMouse(l list.Model, msg tea.MouseMsg, tabBarY int) (list.Model, tea.Cmd, bool) {
+func handleListMouse(l list.Model, msg tea.MouseMsg, tabBarHeight int) (list.Model, tea.Cmd, bool) {
 	switch msg.Button {
 	case tea.MouseButtonWheelUp:
 		l.CursorUp()
@@ -40,7 +40,7 @@ func handleListMouse(l list.Model, msg tea.MouseMsg, tabBarY int) (list.Model, t
 		if msg.Action != tea.MouseActionRelease {
 			return l, nil, true
 		}
-		itemsStartY := tabBarY + 1 + listHeaderLines
+		itemsStartY := tabBarHeight + listHeaderLines
 		if msg.Y < itemsStartY {
 			return l, nil, true
 		}
@@ -106,13 +106,13 @@ func (m ListView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 	case tea.MouseMsg:
-		updated, cmd, handled := handleListMouse(m.list, msg, 0)
+		updated, cmd, handled := handleListMouse(m.list, msg, 3)
 		m.list = updated
 		if handled {
 			return m, cmd
 		}
 	case tea.WindowSizeMsg:
-		m.list.SetSize(msg.Width, msg.Height-3)
+		m.list.SetSize(msg.Width, msg.Height-4)
 	}
 	var cmd tea.Cmd
 	m.list, cmd = m.list.Update(msg)

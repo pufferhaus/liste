@@ -79,7 +79,7 @@ func (m SearchView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
-		m.list.SetSize(msg.Width, msg.Height-5)
+		m.list.SetSize(msg.Width, msg.Height-7)
 	}
 
 	var cmds []tea.Cmd

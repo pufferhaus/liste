@@ -14,15 +14,10 @@ import (
 )
 
 var (
-	editBorderStyle = lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("#74b9ff")).
-			Padding(0, 1)
 	editHeaderStyle = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("#cdd6f4"))
 	editLabelStyle  = lipgloss.NewStyle().Faint(true).Width(10)
 	editHintStyle   = lipgloss.NewStyle().Faint(true)
 	editErrorStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("#f38ba8"))
-	editBodyLabel   = lipgloss.NewStyle().Faint(true)
 )
 
 const (
@@ -33,12 +28,27 @@ const (
 	efTags     = 4
 	efBody     = 5
 	efCount    = 6
+
+	// editLabelWidth is the fixed width of field labels (matches editLabelStyle.Width).
+	editLabelWidth = 10
+	// editFieldStartX is the terminal X where textinput content begins (label + space).
+	editFieldStartX = editLabelWidth + 1
+	// editContentStartY is the terminal Y where edit content begins (after 3-line tab bar).
+	editContentStartY = tabBarHeight
+	// editFieldsStartY is the terminal Y of the first input field.
+	// Layout: header(1) + blank(1) = 2 lines before fields.
+	editFieldsStartY = editContentStartY + 2
+	// editBodyY is the terminal Y where the textarea begins.
+	// Layout: fields(5) + blank(1) + label(1) = 7 lines after fieldsStart.
+	editBodyStartY = editFieldsStartY + efBody + 2
 )
 
-// ItemSavedMsg signals that the edit overlay saved an item.
+var editFieldLabels = [5]string{"Title:", "Status:", "Priority:", "Phase:", "Tags:"}
+
+// ItemSavedMsg signals that the edit form saved an item.
 type ItemSavedMsg struct{ Item *model.Item }
 
-// EditModel is an overlay for editing all fields of an item.
+// EditModel renders in the content area (view space) for editing an item's fields.
 type EditModel struct {
 	item    *model.Item
 	inputs  [5]textinput.Model
@@ -49,8 +59,6 @@ type EditModel struct {
 	errMsg  string
 	config  *model.Config
 }
-
-var editFieldLabels = [5]string{"Title:", "Status:", "Priority:", "Phase:", "Tags:"}
 
 // NewEditModel creates an EditModel pre-populated with the item's current values.
 func NewEditModel(item *model.Item, cfg *model.Config, width, height int) EditModel {
@@ -91,12 +99,21 @@ func NewEditModel(item *model.Item, cfg *model.Config, width, height int) EditMo
 	return m
 }
 
-func (m *EditModel) applySize(width, height int) {
-	innerW := width - 6 // border (2) + padding (2) + label (10) + gap (1) - overcount
-	if innerW < 10 {
-		innerW = 10
+// fieldAtY returns the field index for a click at terminal Y, or -1 if not a field.
+func fieldAtY(termY int) int {
+	switch {
+	case termY >= editFieldsStartY && termY < editFieldsStartY+efBody:
+		return termY - editFieldsStartY // 0-4
+	case termY >= editBodyStartY:
+		return efBody
+	default:
+		return -1
 	}
-	inputW := innerW - 11 // label=10 + space=1
+}
+
+func (m *EditModel) applySize(width, height int) {
+	// Content area = height - tabBarHeight - 1 (status bar)
+	inputW := width - editFieldStartX - 1
 	if inputW < 10 {
 		inputW = 10
 	}
@@ -104,11 +121,12 @@ func (m *EditModel) applySize(width, height int) {
 		m.inputs[i].Width = inputW
 	}
 
-	bodyH := height - 18 // border(2)+padding(2)+header(1)+blank(1)+inputs(5)+blank(1)+label(1)+blank(1)+hint(1)
+	// body height = content area - header(1) - blank(1) - inputs(5) - blank(1) - label(1) - hint(1) - err(1)
+	bodyH := height - tabBarHeight - 12
 	if bodyH < 3 {
 		bodyH = 3
 	}
-	bodyW := width - 8
+	bodyW := width - 1
 	if bodyW < 10 {
 		bodyW = 10
 	}
@@ -142,14 +160,29 @@ func (m EditModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+s":
 			return m.save()
 		case "tab":
-			next := (m.focused + 1) % efCount
-			m.focusField(next)
+			m.focusField((m.focused + 1) % efCount)
 			return m, textinput.Blink
 		case "shift+tab":
-			prev := (m.focused - 1 + efCount) % efCount
-			m.focusField(prev)
+			m.focusField((m.focused - 1 + efCount) % efCount)
 			return m, textinput.Blink
 		}
+
+	case tea.MouseMsg:
+		if msg.Button == tea.MouseButtonLeft && msg.Action == tea.MouseActionRelease {
+			if field := fieldAtY(msg.Y); field >= 0 {
+				m.focusField(field)
+				// For textinput fields, position cursor at click X.
+				if field < efBody {
+					clickPos := msg.X - editFieldStartX
+					if clickPos < 0 {
+						clickPos = 0
+					}
+					m.inputs[field].SetCursor(clickPos)
+				}
+				return m, textinput.Blink
+			}
+		}
+
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
@@ -224,27 +257,17 @@ func (m EditModel) View() string {
 	sb.WriteString(editHeaderStyle.Render("Edit  "+m.item.ID) + "\n\n")
 
 	for i, label := range editFieldLabels {
-		labelStr := editLabelStyle.Render(label)
-		var inputStr string
-		if i == m.focused {
-			inputStr = m.inputs[i].View()
-		} else {
-			inputStr = m.inputs[i].View()
-		}
-		sb.WriteString(labelStr + " " + inputStr + "\n")
+		sb.WriteString(editLabelStyle.Render(label) + " " + m.inputs[i].View() + "\n")
 	}
 
-	sb.WriteString("\n" + editBodyLabel.Render("Body:") + "\n")
+	sb.WriteString("\n" + editLabelStyle.Render("Body:") + "\n")
 	sb.WriteString(m.body.View() + "\n")
-
-	if m.errMsg != "" {
-		sb.WriteString(editErrorStyle.Render("✗ "+m.errMsg) + "\n")
-	}
 
 	sb.WriteString(editHintStyle.Render("tab: next field · ctrl+s: save · esc: cancel"))
 
-	return editBorderStyle.
-		Width(m.width - 2).
-		Height(m.height - 2).
-		Render(sb.String())
+	if m.errMsg != "" {
+		sb.WriteString("\n" + editErrorStyle.Render("✗ "+m.errMsg))
+	}
+
+	return sb.String()
 }
