@@ -6,14 +6,14 @@
             "bin": [
                 "liste.exe"
             ],
-            "hash": "c82431b8328f0649257c7427fc546785a8d4776858650d771fff44c730afb82c"
+            "hash": "b8311deacd4d33d858be088ef504b792a42d07e7930496c80bb323801d878278"
         },
         "arm64": {
             "url": "https://github.com/pufferhaus/liste/releases/download/v1.1.0/liste_1.1.0_windows_arm64.zip",
             "bin": [
                 "liste.exe"
             ],
-            "hash": "de354634398a1243cb4bd301b947f8fe6297863506133e6241a78d5f8d25dbec"
+            "hash": "8e49c02d6eedcfe7cf19d67fcf8af56e6ed3b7683cf24683cd066e5b009585e2"
         }
     },
     "homepage": "https://github.com/pufferhaus/liste",
