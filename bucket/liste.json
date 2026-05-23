@@ -1,19 +1,19 @@
 {
-    "version": "1.1.2",
+    "version": "1.1.3",
     "architecture": {
         "64bit": {
-            "url": "https://github.com/pufferhaus/liste/releases/download/v1.1.2/liste_1.1.2_windows_amd64.zip",
+            "url": "https://github.com/pufferhaus/liste/releases/download/v1.1.3/liste_1.1.3_windows_amd64.zip",
             "bin": [
                 "liste.exe"
             ],
-            "hash": "36bc0f157bc91bb9f1b93f48b07dad03ea3996b9855d6da5a7b447bbb7e67b59"
+            "hash": "4f4a70da5ae3d13aec623d41f0d3d5bb8881a9a6de3b0fcd836b4a92293d8296"
         },
         "arm64": {
-            "url": "https://github.com/pufferhaus/liste/releases/download/v1.1.2/liste_1.1.2_windows_arm64.zip",
+            "url": "https://github.com/pufferhaus/liste/releases/download/v1.1.3/liste_1.1.3_windows_arm64.zip",
             "bin": [
                 "liste.exe"
             ],
-            "hash": "0e33eb42630dd799b8b32d5bad85c2659a371540da2610c48f3d8dc4a56d3dd2"
+            "hash": "d2c64ac5eaef4b9b67d35f32d088feb03f6023e723bd57fcf1d6fbd0a3fd9ea4"
         }
     },
     "homepage": "https://github.com/pufferhaus/liste",
