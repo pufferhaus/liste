@@ -43,6 +43,16 @@ func (m BlockedView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if li, ok := m.list.SelectedItem().(ListItem); ok {
 				return m, func() tea.Msg { return ItemDoneMsg{ID: li.Item.ID} }
 			}
+		case "e":
+			if li, ok := m.list.SelectedItem().(ListItem); ok {
+				return m, func() tea.Msg { return ItemEditMsg{Item: li.Item} }
+			}
+		}
+	case tea.MouseMsg:
+		updated, cmd, handled := handleListMouse(m.list, msg, 0)
+		m.list = updated
+		if handled {
+			return m, cmd
 		}
 	case tea.WindowSizeMsg:
 		m.list.SetSize(msg.Width, msg.Height-3)

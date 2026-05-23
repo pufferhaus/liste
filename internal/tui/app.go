@@ -24,16 +24,18 @@ var (
 // AppModel is the root bubbletea model for liste -i.
 // Exported so tests can inspect it.
 type AppModel struct {
-	tabs       []string
-	activeTab  int
-	viewMap    map[string]tea.Model
-	overlay    *DetailModel
-	blockInput *blockInputModel
-	store      *store.Store
-	tuiCfg     model.TUIConfig
-	width      int
-	height     int
-	statusMsg  string
+	tabs        []string
+	activeTab   int
+	viewMap     map[string]tea.Model
+	overlay     *DetailModel
+	editOverlay *EditModel
+	blockInput  *blockInputModel
+	store       *store.Store
+	config      *model.Config
+	tuiCfg      model.TUIConfig
+	width       int
+	height      int
+	statusMsg   string
 }
 
 // blockInputModel handles the 'b' key — prompts for block reason inline.
@@ -65,6 +67,7 @@ func NewAppForTest(cfg *model.Config) AppModel {
 		tabs:      tuiCfg.Views,
 		activeTab: startIdx,
 		viewMap:   make(map[string]tea.Model),
+		config:    cfg,
 		tuiCfg:    tuiCfg,
 	}
 }
@@ -112,13 +115,13 @@ func (m AppModel) currentViewName() string {
 	return "list"
 }
 
-// Run starts the bubbletea program.
+// Run starts the bubbletea program with mouse support enabled.
 func Run(result *discovery.Result, rootCfg *model.Config) error {
 	m, err := newApp(result, rootCfg)
 	if err != nil {
 		return err
 	}
-	p := tea.NewProgram(m, tea.WithAltScreen())
+	p := tea.NewProgram(m, tea.WithAltScreen(), tea.WithMouseCellMotion())
 	if _, err := p.Run(); err != nil {
 		return fmt.Errorf("TUI error: %w", err)
 	}
@@ -136,13 +139,18 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if m.blockInput != nil {
 		return m.updateBlockInput(msg)
 	}
-	// CloseDetailMsg must be checked before the overlay guard — the overlay
-	// being open means all messages are routed there, so CloseDetailMsg would
-	// never reach the switch below without this early check.
+
+	// CloseDetailMsg closes whichever overlay is open.
 	if _, ok := msg.(CloseDetailMsg); ok {
 		m.overlay = nil
+		m.editOverlay = nil
 		return m, nil
 	}
+
+	if m.editOverlay != nil {
+		return m.updateEditOverlay(msg)
+	}
+
 	if m.overlay != nil {
 		return m.updateOverlay(msg)
 	}
@@ -156,6 +164,30 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.viewMap[name] = updated
 		}
 		return m, nil
+
+	case tea.MouseMsg:
+		// Handle tab bar clicks (Y=0 is the tab bar row).
+		if msg.Button == tea.MouseButtonLeft && msg.Action == tea.MouseActionRelease && msg.Y == 0 {
+			x := 1 // tabBarStyle has Padding(0,1) — 1 char left pad
+			for i, name := range m.tabs {
+				var tabStr string
+				if i == m.activeTab {
+					tabStr = tabActiveStyle.Render(strings.ToUpper(name))
+				} else {
+					tabStr = tabInactiveStyle.Render(name)
+				}
+				w := lipgloss.Width(tabStr)
+				if msg.X >= x && msg.X < x+w {
+					if i != m.activeTab {
+						m.activeTab = i
+						return m, m.ensureViewLoaded()
+					}
+					return m, nil
+				}
+				x += w + 2 // "  " separator between tabs
+			}
+		}
+		return m.updateCurrentView(msg)
 
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -178,6 +210,25 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.overlay = &overlay
 		return m, nil
 
+	case views.ItemEditMsg:
+		m.overlay = nil // close detail if open
+		if m.config != nil {
+			edit := NewEditModel(msg.Item, m.config, m.width, m.height)
+			m.editOverlay = &edit
+			return m, edit.Init()
+		}
+		return m, nil
+
+	case ItemSavedMsg:
+		if err := m.store.WriteItem(msg.Item); err != nil {
+			m.statusMsg = "Error: " + err.Error()
+		} else {
+			m.statusMsg = msg.Item.ID + " saved"
+			m.editOverlay = nil
+			m.reloadCurrentView()
+		}
+		return m, nil
+
 	case views.ItemDoneMsg:
 		if err := m.markDone(msg.ID); err != nil {
 			m.statusMsg = "Error: " + err.Error()
@@ -193,10 +244,6 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		ti.Focus()
 		m.blockInput = &blockInputModel{input: ti, itemID: msg.ID}
 		return m, textinput.Blink
-
-	case CloseDetailMsg:
-		m.overlay = nil
-		return m, nil
 	}
 
 	return m.updateCurrentView(msg)
@@ -206,6 +253,14 @@ func (m AppModel) updateOverlay(msg tea.Msg) (tea.Model, tea.Cmd) {
 	updated, cmd := m.overlay.Update(msg)
 	if detail, ok := updated.(DetailModel); ok {
 		m.overlay = &detail
+	}
+	return m, cmd
+}
+
+func (m AppModel) updateEditOverlay(msg tea.Msg) (tea.Model, tea.Cmd) {
+	updated, cmd := m.editOverlay.Update(msg)
+	if edit, ok := updated.(EditModel); ok {
+		m.editOverlay = &edit
 	}
 	return m, cmd
 }
@@ -299,6 +354,10 @@ func (m AppModel) View() string {
 		return "Loading..."
 	}
 
+	if m.editOverlay != nil {
+		return m.editOverlay.View()
+	}
+
 	if m.overlay != nil {
 		return m.overlay.View()
 	}
@@ -322,7 +381,7 @@ func (m AppModel) View() string {
 		viewStr = v.View()
 	}
 
-	hint := "  tab/shift+tab: switch  d: done  b: block  enter: detail  q: quit"
+	hint := "  tab/shift+tab: switch  d: done  b: block  e: edit  enter: detail  q: quit"
 	statusBar := statusBarStyle.Render(m.statusMsg + hint)
 
 	return tabBar + "\n" + viewStr + "\n" + statusBar

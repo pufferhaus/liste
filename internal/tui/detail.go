@@ -10,6 +10,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/pufferhaus/liste/internal/model"
 	"github.com/pufferhaus/liste/internal/output"
+	"github.com/pufferhaus/liste/internal/tui/views"
 )
 
 var (
@@ -100,6 +101,9 @@ func (m DetailModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "esc", "q":
 			return m, func() tea.Msg { return CloseDetailMsg{} }
+		case "e":
+			item := m.item
+			return m, func() tea.Msg { return views.ItemEditMsg{Item: item} }
 		}
 	case tea.WindowSizeMsg:
 		m.width = msg.Width

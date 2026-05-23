@@ -103,10 +103,21 @@ func (m NextView) Init() tea.Cmd { return nil }
 func (m NextView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		if msg.String() == "enter" {
+		switch msg.String() {
+		case "enter":
 			if li, ok := m.list.SelectedItem().(ListItem); ok {
 				return m, func() tea.Msg { return ItemSelectedMsg(li) }
 			}
+		case "e":
+			if li, ok := m.list.SelectedItem().(ListItem); ok {
+				return m, func() tea.Msg { return ItemEditMsg{Item: li.Item} }
+			}
+		}
+	case tea.MouseMsg:
+		updated, cmd, handled := handleListMouse(m.list, msg, 0)
+		m.list = updated
+		if handled {
+			return m, cmd
 		}
 	case tea.WindowSizeMsg:
 		m.list.SetSize(msg.Width, msg.Height-3)

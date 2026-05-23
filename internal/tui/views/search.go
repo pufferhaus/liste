@@ -67,6 +67,15 @@ func (m SearchView) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, func() tea.Msg { return ItemSelectedMsg(li) }
 			}
 		}
+	case tea.MouseMsg:
+		switch msg.Button {
+		case tea.MouseButtonWheelUp:
+			m.list.CursorUp()
+			return m, nil
+		case tea.MouseButtonWheelDown:
+			m.list.CursorDown()
+			return m, nil
+		}
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
