@@ -120,11 +120,19 @@ func NewAppForTest(cfg *model.Config) AppModel {
 
 // newApp creates a fully initialized AppModel backed by a real store.
 func newApp(result *discovery.Result, rootCfg *model.Config) (AppModel, error) {
+	return NewTestApp(store.New(result.Root), rootCfg, 80, 24)
+}
+
+// NewTestApp creates a fully initialized AppModel against a pre-built store.
+// Exposed for end-to-end TUI tests.
+func NewTestApp(s *store.Store, rootCfg *model.Config, width, height int) (AppModel, error) {
 	m := NewAppForTest(rootCfg)
-	m.store = store.New(result.Root)
+	m.store = s
+	m.width = width
+	m.height = height
 
 	tuiCfg := rootCfg.TUI.Resolved()
-	view, err := m.initView(tuiCfg.DefaultView, 80, 24)
+	view, err := m.initView(tuiCfg.DefaultView, width, height)
 	if err != nil {
 		return AppModel{}, fmt.Errorf("initializing default view: %w", err)
 	}
@@ -244,6 +252,22 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
+	if savedMsg, ok := msg.(ItemSavedMsg); ok {
+		if err := m.store.WriteItem(savedMsg.Item); err != nil {
+			m.statusMsg = "Error: " + err.Error()
+		} else {
+			m.statusMsg = savedMsg.Item.ID + " saved"
+			m.editOverlay = nil
+			m.reloadCurrentView()
+			// Refresh detail overlay with saved data so it reflects the edit.
+			if m.overlay != nil {
+				overlay := NewDetailModel(savedMsg.Item, m.width, m.height)
+				m.overlay = &overlay
+			}
+		}
+		return m, nil
+	}
+
 	// Mouse: tab bar clicks always take priority, even during editing.
 	if mouse, ok := msg.(tea.MouseMsg); ok {
 		if mouse.Button == tea.MouseButtonLeft &&
@@ -267,12 +291,15 @@ func (m AppModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	if m.overlay != nil {
-		return m.updateOverlay(msg)
-	}
-
+	// editOverlay is visually on top of overlay (see renderBaseView), so it
+	// must take input precedence — otherwise keystrokes go to detail's viewport
+	// instead of the edit form's textinputs.
 	if m.editOverlay != nil {
 		return m.updateEditOverlay(msg)
+	}
+
+	if m.overlay != nil {
+		return m.updateOverlay(msg)
 	}
 
 	switch msg := msg.(type) {

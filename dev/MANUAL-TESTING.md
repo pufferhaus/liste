@@ -172,84 +172,36 @@ Version field should match the running binary.
 
 ---
 
-## 10. TUI (manual — requires TTY)
+## 10. TUI
 
-Launch:
+The TUI is covered by an automated `teatest`-based suite in `internal/tui/`:
+
 ```bash
-cd /tmp/liste-sandbox && liste -i
+go test ./internal/tui/... -race -timeout=120s
 ```
 
-### Top-level
+Coverage (one file per area, all keyboard + mouse paths):
 
-- [ ] Banner renders with logo + version
-- [ ] Tab bar across the top: `list | roadmap | blocked | next | search`
-- [ ] `Tab` / `Shift+Tab` cycles forward/backward through views
-- [ ] Mouse click on a tab switches to that view
-- [ ] `Ctrl+C` exits cleanly
-- [ ] `q` from list view exits (no overlay open)
+| File | Tests |
+|------|-------|
+| `tab_test.go` | tab bar render, forward/backward cycle, mouse click on tab |
+| `detail_test.go` | enter opens detail, action-bar key + mouse, `d`/`b`/`e`/esc |
+| `modal_test.go` | delete-confirm modal: keyboard `y`/`n`/esc + mouse confirm/cancel |
+| `edit_test.go` | open edit, tab-cycle fields, save (ctrl+s), discard modal y/n |
+| `search_test.go` | filter-as-you-type, esc clears, enter + mouse open detail |
+| `lifecycle_test.go` | `q`/ctrl+c quit, window resize propagation |
 
-### List view
+Add a new test alongside the matching file when adding a TUI feature.
 
-- [ ] `↑` / `↓` and `k` / `j` move selection
-- [ ] `Enter` opens detail overlay for selected item
-- [ ] Mouse click on a list row opens detail overlay
-- [ ] `d` on a row marks it done (refreshes list)
-- [ ] `b` on a row opens block prompt
-- [ ] `e` on a row opens edit overlay
+### Manual-only checks (need a real TTY)
 
-### Detail overlay
+These don't get automated coverage:
 
-- [ ] Shows item ID, type, status, priority, body
-- [ ] Action bar at bottom: `[e] Edit  [d] Done  [b] Block  [x] Delete  esc: close`
-- [ ] Mouse click on `[e]` opens edit overlay
-- [ ] Mouse click on `[d]` marks done
-- [ ] Mouse click on `[b]` opens block prompt
-- [ ] Mouse click on `[x]` opens delete confirmation modal
-- [ ] `esc` closes detail overlay
-- [ ] Delete confirmation modal has red border
-- [ ] Mouse click on "Confirm Delete" deletes item AND closes detail
-- [ ] Mouse click on "Cancel" returns to detail view
-- [ ] `esc` cancels the delete modal and returns to detail
-
-### Edit overlay
-
-- [ ] Textarea is editable
-- [ ] Mouse click in textarea positions cursor at clicked row+col
-- [ ] `ctrl+s` saves
-- [ ] `esc` triggers discard-confirmation modal
-- [ ] "Discard" closes edit overlay (returns to detail if open)
-- [ ] "Cancel" returns to edit overlay with changes intact
-
-### Roadmap view
-
-- [ ] Items grouped by phase
-- [ ] Selection moves with `↑` / `↓`
-- [ ] `Enter` opens detail overlay
-
-### Blocked view
-
-- [ ] Shows only blocked items with reason
-- [ ] `Enter` opens detail overlay
-- [ ] `d` / `e` keybindings still work
-
-### Next view
-
-- [ ] Priority-sorted queue rendered
-- [ ] `Enter` opens detail overlay
-- [ ] `e` opens edit overlay
-
-### Search view
-
-- [ ] Textinput focused on entry
-- [ ] Mouse click on the textinput (Y=4) focuses + positions cursor
-- [ ] Real-time filtering as you type
-- [ ] Mouse click on result row (Y≥9) opens detail overlay
-- [ ] `esc` clears search and returns focus
-
-### Quit guard
-
+- [ ] Banner renders with logo + version on `liste -i` startup
 - [ ] Trying `--json` with `-i`: `Error: --interactive cannot be used with --json or --quiet`
 - [ ] Trying `--quiet` with `-i`: same error
+- [ ] AltScreen + mouse-cell-motion enable cleanly on startup, restore on quit
+- [ ] Glamour markdown rendering in detail body visually sane on real terminals
 
 ---
 
@@ -261,6 +213,7 @@ These should be filed in `liste` itself (`liste add bug ...`):
 2. **`liste unlink` signature mismatch**: README + skills say `liste unlink <id> <type> <target>` (3 args). Actual binary takes `<id> <target>` (2 args) and removes all links matching the (id, target) pair regardless of type.
 3. **`liste diff` never populates `completed`**: items marked `done` are not surfaced under COMPLETED in `liste diff` output. Likely because `done` doesn't write a `completed:` timestamp; diff filter requires it.
 4. **`--project` requires the path, not the project name**: `liste list --project api-service` errors with `project not found` even though `liste projects` displays `api-service` in its config. Have to use `--project services/api`. Either resolver should accept either form, or `liste projects` should display the path users need to pass.
+5. **Edit-from-detail input routing was broken pre-2026-05-23**: when the edit overlay was opened from the detail view, keystrokes were swallowed by the still-active detail's viewport instead of reaching the edit form's textinputs. Fixed in `app.go` by prioritizing `editOverlay` over `overlay` in the input router (originally exposed by the new teatest suite). Save (`ctrl+s`) also no longer worked from that flow because `ItemSavedMsg` reached the edit overlay instead of `AppModel`; promoted to an early intercept.
 
 ---
 
@@ -269,5 +222,5 @@ These should be filed in `liste` itself (`liste add bug ...`):
 After fixes ship, re-run sections 1–9 from the top. Bash one-liner version
 of the CLI portion is kept in `dev/manual-test.sh` (TODO: extract).
 
-When new features land, add a row to the appropriate section and the TUI
-manual checklist if applicable.
+When new features land, add a row to the appropriate section and a test
+alongside the matching file in `internal/tui/`.
